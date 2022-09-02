@@ -1,4 +1,4 @@
-version: "3"
+```version: "3"
 services:
 #---------------------------------------------------------------------------------------------------------------------------------#
 #                         whoogle-search - A self-hosted, ad-free, privacy-respecting metasearch engine                           #
@@ -14,4 +14,4 @@ services:
       - PUID=1026
       - PGID=100
       - TZ=America/New_York
-  
+```

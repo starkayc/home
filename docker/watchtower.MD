@@ -1,4 +1,4 @@
-version: "3.3"
+```version: "3.3"
 services:
 #--------------------------------------------------------------------------------------------#
 #                         Watchtower - Automatic container updates                           #
@@ -11,3 +11,4 @@ services:
       - watchtower
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+```

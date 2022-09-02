@@ -1,4 +1,4 @@
-version: "3.3"
+```version: "3.3"
 services:
 #--------------------------------------------------------------------------------------------#
 #                            Uptime Kuma - Uptime Monitoring Tool                            #
@@ -11,3 +11,4 @@ services:
       - '8003:3001'
     volumes:
       - '/volume1/docker/uptimekuma:/app/data'
+```
