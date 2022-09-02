@@ -1,4 +1,4 @@
-```version: '3'
+version: '3'
 services:
 #---------------------------------------------------------------------#
 #                Homarr -  A homepage for your server.                #
@@ -12,4 +12,3 @@ services:
       - /volume1/docker/homarr/icons:/app/public/icons
     ports:
       - '7575:7575'
-```
