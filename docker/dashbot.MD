@@ -1,4 +1,4 @@
-version: "3"
+```version: "3"
 services:
 #--------------------------------------------------------------------------------------------#
 #                             Dashdot - A modern server stat dashboard                       #
@@ -12,3 +12,4 @@ services:
     environment:
       DASHDOT_OVERRIDE_DISTRO: Ubuntu
     privileged: true
+```
