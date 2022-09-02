@@ -1,4 +1,4 @@
-version: "3"
+```version: "3"
 services:
 #--------------------------------------------------------------------------------------------#
 #                                 Dozzle - Real-time Docker Log Viewer                       #
@@ -10,4 +10,4 @@ services:
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
     ports:
-      - '8004:8080'
+      - '8004:8080'```
