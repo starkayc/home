@@ -1,4 +1,4 @@
-version: "3.8"
+```version: "3.8"
 services:
 #--------------------------------------------------------------------------------------------#
 #                          Dashy - The Ultimate Homepage for your Homelab                    #
@@ -22,3 +22,4 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+```
