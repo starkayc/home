@@ -1,0 +1,27 @@
+version: "3.3"
+services:
+  homepage:
+    image: ghcr.io/benphelps/homepage:latest
+    container_name: homepage
+    networks:
+      - proxy
+    restart: unless-stopped
+    volumes:
+      - /home/starkayc/docker/homepage/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.homepage.entrypoints=http
+      - traefik.http.routers.homepage.rule=Host(`homepage.local.example.com`)
+      - traefik.http.middlewares.homepage-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.homepage.middlewares=homepage-https-redirect
+      - traefik.http.routers.homepage-secure.entrypoints=https
+      - traefik.http.routers.homepage-secure.rule=Host(`homepage.local.example.com`)
+      - traefik.http.routers.homepage-secure.tls=true
+      - traefik.http.routers.homepage-secure.service=homepage
+      - traefik.http.services.homepage.loadbalancer.server.port=3000
+      - traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

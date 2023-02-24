@@ -1,0 +1,52 @@
+version: "3"
+services:
+  # --- MariaDB
+  db:
+    image: mariadb:10.5
+    container_name: linkace-db
+    networks:
+      - proxy
+    restart: unless-stopped
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+    volumes:
+      - db:/var/lib/mysql
+
+  # --- LinkAce Image with PHP 7.4 and nginx
+  app:
+    image: linkace/linkace:simple
+    container_name: linkace
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - proxy
+    volumes:
+      - ./.env:/app/.env
+      - /home/starkayc/docker/linkace/backups:/app/storage/app/backups
+      - linkace_logs:/app/storage/logs
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.linkace.entrypoints=http
+      - traefik.http.routers.linkace.rule=Host(`linkace.local.example.com`)
+      - traefik.http.middlewares.linkace-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.linkace.middlewares=linkace-https-redirect
+      - traefik.http.routers.linkace-secure.entrypoints=https
+      - traefik.http.routers.linkace-secure.rule=Host(`linkace.local.example.com`)
+      - traefik.http.routers.linkace-secure.tls=true
+      - traefik.http.routers.linkace-secure.service=linkace
+      - traefik.http.services.linkace.loadbalancer.server.port=80
+      - traefik.docker.network=proxy"
+volumes:
+  linkace_logs:
+  db:
+    driver: local
+
+networks:
+  proxy:
+    external: true
+

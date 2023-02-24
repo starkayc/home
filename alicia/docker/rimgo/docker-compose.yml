@@ -1,0 +1,10 @@
+version: '3'
+services:
+  rimgo:
+    container_name: rimgo
+    network_mode: tunnel
+    image: codeberg.org/video-prize-ranch/rimgo
+    ports:
+      - 4001:3000
+    restart: unless-stopped
+

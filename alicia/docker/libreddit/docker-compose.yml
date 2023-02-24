@@ -1,0 +1,19 @@
+version: '3'
+services:
+  libreddit:
+    container_name: libreddit
+    network_mode: tunnel
+    environment:
+      LIBREDDIT_DEFAULT_AUTOPLAY_VIDEOS: 'off'        # on, off
+      LIBREDDIT_DEFAULT_COMMENT_SORT: 'top'          # hot, new, top, rising, controversial
+      LIBREDDIT_DEFAULT_FRONT_PAGE: 'popular'        # default, popular, all
+      LIBREDDIT_DEFAULT_HIDE_HLS_NOTIFICATION: 'on'  # on, off
+      LIBREDDIT_DEFAULT_LAYOUT: 'card'               # card, clean, compact
+      LIBREDDIT_DEFAULT_POST_SORT: 'confidence'      # confidence, top, new, controversial, old
+      LIBREDDIT_DEFAULT_SHOW_NSFW: 'on'              # on, off
+      LIBREDDIT_DEFAULT_THEME: 'dark'                # system, light, dark, black, dracula, nord, laserwave, violet, gold, rosebox
+      LIBREDDIT_DEFAULT_USE_HLS: 'on'                # on, off
+      LIBREDDIT_DEFAULT_BLUR_NSFW: 'on'              # on, off
+    image: spikecodes/libreddit:latest
+    ports:
+      - "8080:8080"

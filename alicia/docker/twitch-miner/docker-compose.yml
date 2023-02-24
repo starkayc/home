@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  miner:
+    container_name: tcpmv2
+    image: rdavidoff/twitch-channel-points-miner-v2
+    restart: always
+    tty: true
+    stdin_open: true
+    environment:
+      - TERM=xterm-256color
+    volumes:
+      - /home/starkayc/docker/twitch/analytics:/usr/src/app/analytics
+      - /home/starkayc/docker/twitch/cookies:/usr/src/app/cookies
+      - /home/starkayc/docker/twitch/logs:/usr/src/app/logs
+      - /home/starkayc/docker/twitch/run.py:/usr/src/app/run.py:ro
+    ports:
+      - "7003:7003"

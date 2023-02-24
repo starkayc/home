@@ -1,0 +1,14 @@
+version: "3"
+services:
+  whoogle-search:
+    image: benbusby/whoogle-search
+    container_name: whoogle
+    hostname: whoogle
+    restart: unless-stopped
+    network_mode: tunnel
+    ports:
+      - "8200:5000"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York

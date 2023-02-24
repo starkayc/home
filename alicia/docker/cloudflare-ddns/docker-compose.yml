@@ -1,0 +1,11 @@
+version: '2'
+services:
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    restart: always
+    environment:
+      - API_KEY=apikey
+      - ZONE=example.com
+      - SUBDOMAIN=ddns
+      - PROXIED=false
