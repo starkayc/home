@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  sonarr:
+    image: ghcr.io/hotio/sonarr
+    container_name: sonarr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - UMASK=002
+      - TZ=$TZ
+    volumes:
+      - ${DOCKER}/apps/${APP}/config:/config
+networks:
+  frontend:
+    external: true

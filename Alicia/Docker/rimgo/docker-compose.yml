@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  rimgo:
+    container_name: rimgo
+    image: codeberg.org/rimgo/rimgo
+    networks:
+      - frontend
+    restart: unless-stopped
+    user: 65534:65534
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    env_file: .env
+networks:
+  frontend:
+    external: true

@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  portainer:
+    image: portainer/portainer-ee
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKER}/apps/${APP}/data:/data
+
+networks:
+  frontend:
+    external: true

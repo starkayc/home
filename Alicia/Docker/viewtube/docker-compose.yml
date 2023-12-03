@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  viewtube:
+    restart: unless-stopped
+    image: mauriceo/viewtube:latest
+    depends_on:
+      - viewtube-mongodb
+      - viewtube-redis
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - ${DOCKER}/apps/${APP}:/data
+    environment:
+      - VIEWTUBE_DATABASE_HOST=viewtube-mongodb
+      - VIEWTUBE_REDIS_HOST=viewtube-redis
+      
+  viewtube-mongodb:
+    restart: unless-stopped
+    image: mongo:4.4
+    networks:
+      - backend
+    volumes:
+      - ${DOCKER}/dbs/${APP}/mongo:/data/db
+
+  viewtube-redis:
+    restart: unless-stopped
+    image: redis:7
+    networks:
+      - backend
+    volumes:
+      - ${DOCKER}/dbs/${APP}/redis:/data
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true
