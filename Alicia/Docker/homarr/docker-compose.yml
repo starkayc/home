@@ -1,0 +1,15 @@
+version: '3'
+services:
+  homarr:
+    container_name: homarr
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    networks:
+      - frontend
+    volumes:
+      - ${DOCKER}/apps/${APP}/configs:/app/data/configs
+      - ${DOCKER}/apps/${APP}/data:/data
+      - ${DOCKER}/apps/${APP}/icons:/app/public/icons
+networks:
+  frontend:
+    external: true

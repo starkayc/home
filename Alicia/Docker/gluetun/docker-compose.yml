@@ -1,0 +1,31 @@
+version: "3"
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    network_mode: vpn
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+    volumes:
+      - ${DOCKER}/apps/${APP}:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=private internet access
+      - OPENVPN_USER=$PIA_USER
+      - OPENVPN_PASSWORD=$PIA_PASS
+      - SERVER_REGIONS=US East
+      - TZ=$TZ
+      - UPDATER_PERIOD=24h
+      - HTTPPROXY=on
+      - HTTPPROXY_USER=$HTTPPROXY_USER
+      - HTTPPROXY_PASSWORD=$HTTPPROXY_PASSWORD
+      - SHADOWSOCKS=on
+      - SHADOWSOCKS_PASSWORD=$SHADOWSOCKS_PASSWORD
+      - SHADOWSOCKS_CIPHER=chacha20-ietf-poly1305
+      - DOT_PROVIDERS=quad9

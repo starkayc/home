@@ -1,19 +1,24 @@
 version: '3'
+
 services:
   libreddit:
+    image: libreddit/libreddit:latest
     container_name: libreddit
-    network_mode: tunnel
+    restart: unless-stopped
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
     environment:
-      LIBREDDIT_DEFAULT_AUTOPLAY_VIDEOS: 'off'        # on, off
-      LIBREDDIT_DEFAULT_COMMENT_SORT: 'top'          # hot, new, top, rising, controversial
-      LIBREDDIT_DEFAULT_FRONT_PAGE: 'popular'        # default, popular, all
-      LIBREDDIT_DEFAULT_HIDE_HLS_NOTIFICATION: 'on'  # on, off
-      LIBREDDIT_DEFAULT_LAYOUT: 'card'               # card, clean, compact
-      LIBREDDIT_DEFAULT_POST_SORT: 'confidence'      # confidence, top, new, controversial, old
-      LIBREDDIT_DEFAULT_SHOW_NSFW: 'on'              # on, off
-      LIBREDDIT_DEFAULT_THEME: 'dark'                # system, light, dark, black, dracula, nord, laserwave, violet, gold, rosebox
-      LIBREDDIT_DEFAULT_USE_HLS: 'on'                # on, off
-      LIBREDDIT_DEFAULT_BLUR_NSFW: 'on'              # on, off
-    image: spikecodes/libreddit:latest
-    ports:
-      - "8080:8080"
+      LIBREDDIT_DEFAULT_AUTOPLAY_VIDEOS: 'off'
+      LIBREDDIT_DEFAULT_COMMENT_SORT: 'top'
+      LIBREDDIT_DEFAULT_HIDE_HLS_NOTIFICATION: 'on'
+      LIBREDDIT_DEFAULT_LAYOUT: 'card'
+      LIBREDDIT_DEFAULT_POST_SORT: 'confidence'
+      LIBREDDIT_DEFAULT_SHOW_NSFW: 'on'
+      LIBREDDIT_DEFAULT_THEME: 'dark'
+      LIBREDDIT_DEFAULT_USE_HLS: 'on'
+      LIBREDDIT_DEFAULT_BLUR_NSFW: 'on'
+networks:
+  frontend:
+    external: true
