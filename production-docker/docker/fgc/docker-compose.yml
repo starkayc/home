@@ -1,0 +1,17 @@
+version: "3.3"
+services:
+  fgc-starkayc:
+    image: ghcr.io/vogler/free-games-claimer:latest
+    container_name: fgc-starkayc
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command: bash -c " node prime-gaming; node gog; echo sleeping; sleep 1d"
+    ports:
+      - 6080:6080
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/profiles/starkayc:/fgc/data
+    environment:
+      - NOTIFY=ntfy://ntfy.local.example.com/games
+      - NOTIFY=discord://webhook_id/webhook_token
+networks: {}

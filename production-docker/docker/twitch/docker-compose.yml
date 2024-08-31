@@ -1,0 +1,21 @@
+version: "3.9"
+
+services: 
+  tcpmv2-starkayc:
+    container_name: tcpmv2-starkayc
+    image: rdavidoff/twitch-channel-points-miner-v2
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tty: true
+    stdin_open: true
+    environment:
+      - TERM=xterm-256color
+    network_mode: container:gluetun
+#    ports:
+#      - "5000:5000"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/analytics:/usr/src/app/analytics
+      - ${USERDIR}/apps/${CONTAINER}/cookies:/usr/src/app/cookies
+      - ${USERDIR}/apps/${CONTAINER}/logs:/usr/src/app/logs
+      - ${USERDIR}/apps/${CONTAINER}/starkayc.py:/usr/src/app/run.py:ro

@@ -1,0 +1,24 @@
+services:
+
+  caddy:
+    build: ./dockerfile-caddy
+    container_name: caddy
+    hostname: caddy
+    restart: unless-stopped
+    environment:
+      - MY_DOMAIN
+      - CLOUDFLARE_API_TOKEN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/Caddyfile:/etc/caddy/Caddyfile
+      - ${USERDIR}/apps/${CONTAINER}/config:/config
+      - ${USERDIR}/apps/${CONTAINER}/data:/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+networks:
+  default:
+    name: $DOCKER_MY_NETWORK
+    external: true

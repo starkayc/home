@@ -1,0 +1,24 @@
+version: "3"
+services:
+  whoogle-search:
+    image: benbusby/whoogle-search
+    container_name: whoogle-search
+    hostname: whoogle
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
+      - WHOOGLE_CONFIG_SEARCH_LANGUAGE=lang_en
+      - WHOOGLE_CONFIG_COUNTRY=US
+      - WHOOGLE_CONFIG_DISABLE=1
+      - WHOOGLE_CONFIG_THEME=dark
+      - HTTPS_ONLY=1
+      - WHOOGLE_CONFIG_URL=${WHOOGLE_CONFIG_URL}
+networks:
+  frontend:
+    external: true

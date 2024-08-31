@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  tdm-starkayc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tdm-starkayc
+    ports:
+    - 5800:5800
+    volumes:
+      - /home/name/Docker/apps/tdm/config:/TwitchDropsMiner/config
+    restart: always
