@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+    watchtower:
+        container_name: watchtower
+        image: containrrr/watchtower
+        network_mode: apps
+        restart: unless-stopped
+        environment:
+            - watchtower
+            - WATCHTOWER_CLEANUP
+            - WATCHTOWER_NOTIFICATIONS=shoutrrr
+            - WATCHTOWER_NOTIFICATION_URL=$NTFY
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"

@@ -1,0 +1,31 @@
+version: "3.4"
+
+services:
+  homebox:
+    image: ghcr.io/hay-kot/homebox:latest
+    container_name: homebox
+    restart: always
+    networks:
+      - frontend
+    environment:
+    - HBOX_LOG_LEVEL=info
+    - HBOX_LOG_FORMAT=text
+    - HBOX_WEB_MAX_UPLOAD_SIZE=10
+    - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+    volumes:
+      - ${USERDIR}/dbs/${CONTAINER}:/data/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homebox.entrypoints=http"
+      - "traefik.http.routers.homebox.rule=Host(`homebox.local.example.com`)"
+      - "traefik.http.middlewares.homebox-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.homebox.middlewares=homebox-https-redirect"
+      - "traefik.http.routers.homebox-secure.entrypoints=https"
+      - "traefik.http.routers.homebox-secure.rule=Host(`homebox.local.example.com`)"
+      - "traefik.http.routers.homebox-secure.tls=true"
+      - "traefik.http.routers.homebox-secure.service=homebox"
+      - "traefik.http.services.homebox.loadbalancer.server.port=7745"
+      - "traefik.docker.network=frontend"
+networks:
+  frontend:
+    external: true

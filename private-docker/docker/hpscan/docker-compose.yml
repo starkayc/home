@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  hps-paperless:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hps-paperless
+    hostname: paperless
+    environment:
+      - IP=
+      - PATTERN="scan"_mm.dd.yyyy_hh:MM:ss
+      - RESOLUTION=300
+      - PGID=1000
+      - PUID=1000
+      - TZ=Etc/UTC
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    volumes:
+      - /home/name/Docker/apps/paperless/consume:/scan
+    restart: unless-stopped
+  hps-private:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hps-private
+    hostname: private
+    environment:
+      - IP=
+      - RESOLUTION=300
+      - PATTERN="scan"_mm.dd.yyyy_hh:MM:ss
+      - PGID=1000
+      - PUID=1000
+      - TZ=Etc/UTC
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    volumes:
+      - /home/name/Docker/apps/hpscan/scan:/scan
+    restart: unless-stopped

@@ -1,0 +1,29 @@
+version: "3"
+services:
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    environment:
+      - DOZZLE_NO_ANALYTICS=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.entrypoints=http"
+      - "traefik.http.routers.dozzle.rule=Host(`priv-dozzle.local.example.com`)"
+      - "traefik.http.middlewares.dozzle-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.dozzle.middlewares=dozzle-https-redirect"
+      - "traefik.http.routers.dozzle-secure.entrypoints=https"
+      - "traefik.http.routers.dozzle-secure.rule=Host(`priv-dozzle.local.example.com`)"
+      - "traefik.http.routers.dozzle-secure.tls=true"
+      - "traefik.http.routers.dozzle-secure.service=dozzle"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.docker.network=frontend"
+networks:
+  frontend:
+    external: true

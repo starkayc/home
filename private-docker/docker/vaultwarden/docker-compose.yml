@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    networks:
+      - frontend
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/data:/data
+    environment:
+     - DOMAIN=https://vaultwarden.local.example.com
+     - LOGIN_RATELIMIT_MAX_BURST=10
+     - LOGIN_RATELIMIT_SECONDS=60
+     - ADMIN_RATELIMIT_MAX_BURST=10
+     - ADMIN_RATELIMIT_SECONDS=60
+     - ADMIN_TOKEN=$ADMIN_TOKEN
+     - SIGNUPS_ALLOWED=false
+     - SIGNUPS_VERIFY=true
+     - SIGNUPS_VERIFY_RESEND_TIME=3600
+     - SIGNUPS_VERIFY_RESEND_LIMIT=5
+     - SIGNUPS_DOMAINS_WHITELIST=$SIGNUPS_DOMAINS_WHITELIST
+     - SMTP_HOST=$SMTP_HOST
+     - SMTP_FROM=$SMTP_FROM
+     - SMTP_FROM_NAME=Vaultwarden
+     - SMTP_SECURITY=starttls
+     - SMTP_PORT=587
+     - SMTP_USERNAME=$SMTP_USERNAME
+     - SMTP_PASSWORD=$SMTP_PASSWORD
+     - SMTP_AUTH_MECHANISM="Login"
+     - SENDS_ALLOWED=true
+     - EMERGENCY_ACCESS_ALLOWED=true
+     - WEB_VAULT_ENABLED=true
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=frontend
+      # Redirect to get the certs
+      - traefik.http.middlewares.redirect-https.redirectScheme.scheme=https
+      - traefik.http.middlewares.redirect-https.redirectScheme.permanent=true
+      # routers & services
+      - traefik.http.routers.bitwarden-ui-https.rule=Host(`vaultwarden.local.example.com`)
+      - traefik.http.routers.bitwarden-ui-https.entrypoints=https
+      - traefik.http.routers.bitwarden-ui-https.tls=true
+      - traefik.http.routers.bitwarden-ui-https.service=bitwarden-ui
+      - traefik.http.routers.bitwarden-ui-http.rule=Host(`vaultwarden.local.example.com`)
+      - traefik.http.routers.bitwarden-ui-http.entrypoints=http
+      - traefik.http.routers.bitwarden-ui-http.middlewares=redirect-https
+      - traefik.http.routers.bitwarden-ui-http.service=bitwarden-ui
+      - traefik.http.services.bitwarden-ui.loadbalancer.server.port=80
+networks:
+  frontend:
+    external: true
