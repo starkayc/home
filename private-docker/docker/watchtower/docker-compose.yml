@@ -10,5 +10,6 @@ services:
             - WATCHTOWER_CLEANUP
             - WATCHTOWER_NOTIFICATIONS=shoutrrr
             - WATCHTOWER_NOTIFICATION_URL=$NTFY
+            - TZ=$TZ
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
