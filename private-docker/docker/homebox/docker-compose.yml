@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   homebox:
-    image: ghcr.io/hay-kot/homebox:latest
+    image: ghcr.io/sysadminsmedia/homebox:latest
     container_name: homebox
     restart: always
     networks:
