@@ -12,8 +12,6 @@ services:
     environment:
       - TERM=xterm-256color
     network_mode: container:gluetun
-#    ports:
-#      - "5000:5000"
     volumes:
       - ${USERDIR}/apps/${CONTAINER}/analytics:/usr/src/app/analytics
       - ${USERDIR}/apps/${CONTAINER}/cookies:/usr/src/app/cookies

@@ -13,7 +13,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     ports:
       - 8888:8888/tcp # HTTP proxy
-      - 5000:5000 # Twitch Bot
+      - 5000:5000/tcp # Twitch Bot
+      - 5002:5002/tcp # Twitch Bot
     volumes:
       - ${USERDIR}/apps/${CONTAINER}:/gluetun
     environment:

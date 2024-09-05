@@ -5,15 +5,9 @@ services:
     container_name: ownfoil
     image: a1ex4/ownfoil
     environment:
-      # For write permission in /games directory
       - PUID=1000
       - PGID=1000
-      # Setup auth
-     # - USERNAME=$USERNAME
-     # - PASSWORD=$PASSWORD
-      # - ROOT_DIR=/games
-      - SAVE_ENABLED=true
     volumes:
       - ${USERDIR}/apps/${CONTAINER}/games:/games
     ports:
-      - "8000:80"
+      - "8465:8465"
