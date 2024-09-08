@@ -8,6 +8,7 @@ services:
         environment:
             - watchtower
             - WATCHTOWER_CLEANUP
+            - WATCHTOWER_LABEL_ENABLE
             - WATCHTOWER_NOTIFICATIONS=shoutrrr
             - WATCHTOWER_NOTIFICATION_URL=$NTFY
             - TZ=$TZ
