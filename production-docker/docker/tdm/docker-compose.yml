@@ -11,3 +11,5 @@ services:
     volumes:
       - /home/name/Docker/apps/tdm/config:/TwitchDropsMiner/config
     restart: always
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
