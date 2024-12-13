@@ -1,0 +1,22 @@
+version: "3.8"
+  
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    volumes:
+      - "${USERDIR}/apps/${APP}/ch-data:/var/lib/clickhouse:rw"
+    environment:
+      CLICKHOUSE_DB: "rustlog"
+    restart: unless-stopped
+
+  rustlog:
+    image: ghcr.io/boring-nick/rustlog:master
+    container_name: rustlog
+    ports:
+      - 8020:8020
+    volumes:
+      - "${USERDIR}/apps/${APP}/config.json:/config.json"
+    depends_on: 
+      - clickhouse
+    restart: unless-stopped
