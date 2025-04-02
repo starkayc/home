@@ -1,28 +1,7 @@
 [server]
-bind_addr = "0.0.0.0:2333"
+bind_addr = "0.0.0.0:12345"
 heartbeat_interval = 30
 
-[server.services.minecraft-forge]
-token = ""
-bind_addr = "0.0.0.0:27002"
-[server.services.minecraft-forge-bluemap]
-token = ""
-bind_addr = "0.0.0.0:8101"
-[server.services.minecraft-horror]
-token = ""
-bind_addr = "0.0.0.0:27004"
-[server.services.minecraft-horror-bluemap]
-token = ""
-bind_addr = "0.0.0.0:8102"
-[server.services.minecraft-fabric]
-token = ""
-bind_addr = "0.0.0.0:27001"
-[server.services.minecraft-sf4]
-token = ""
-bind_addr = "0.0.0.0:27005"
-[server.services.minecraft-purpur]
-token = ""
-bind_addr = "0.0.0.0:27007"
-[server.services.minecraft-purpur-bluemap]
-token = ""
-bind_addr = "0.0.0.0:8100"
+[server.services.minecraft-atm10]
+token = "tokenKey"
+bind_addr = "0.0.0.0:27000"

@@ -1,0 +1,17 @@
+fi.example.moe {
+        crowdsec
+        import ../headers/default.conf
+        encode zstd gzip
+        root * /var/www/html/fi
+        file_server
+        php_fastcgi unix//run/php/php8.2-fpm.sock {
+                index indexer.php
+        }
+        log {
+                output file /var/log/caddy/fi.example.moe.log {
+                        roll_size 10mb
+                        roll_keep 20
+                        roll_keep_for 720h
+        }
+     }
+}

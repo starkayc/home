@@ -1,0 +1,36 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRESQL_USER=$POSTGRESQL_USER
+      - POSTGRESQL_PASSWORD=$POSTGRESQL_PASSWORD
+      - POSTGRESQL_DB=$POSTGRESQL_DB
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    restart: unless-stopped
+
+  zipline:
+    image: ghcr.io/diced/zipline:trunk
+    ports:
+      - '127.0.0.1:3000:3000'
+    env_file:
+      - .env
+    volumes:
+      - '${USERDIR}/apps/${CONTAINER}/uploads:/zipline/uploads'
+      - '${USERDIR}/apps/${CONTAINER}/public:/zipline/public'
+      - '${USERDIR}/apps/${CONTAINER}/themes:/zipline/themes'
+    depends_on:
+      - 'postgres'
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    restart: unless-stopped
+volumes:
+  pg_data:

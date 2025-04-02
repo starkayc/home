@@ -1,0 +1,15 @@
+mc.example.moe {
+        crowdsec
+        import ../headers/default.conf
+        import ../tls/cloudflare.conf
+        encode zstd gzip
+        reverse_proxy localhost:8100
+        file_server
+        log {
+                output file /var/log/caddy/bluemap-mc.log {
+                        roll_size 10mb
+                        roll_keep 20
+                        roll_keep_for 720h
+                }
+        }
+}

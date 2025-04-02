@@ -1,0 +1,14 @@
+dashboard.example.moe {
+        crowdsec
+        import ../headers/default.conf
+        encode zstd gzip
+        reverse_proxy localhost:4000
+        file_server
+        log {
+                output file /var/log/caddy/umami.log {
+                        roll_size 10mb
+                        roll_keep 20
+                        roll_keep_for 720h
+                }
+        }
+}
