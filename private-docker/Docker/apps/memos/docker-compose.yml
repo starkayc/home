@@ -1,0 +1,24 @@
+services:
+  memos:
+    image: neosmemo/memos:stable
+    container_name: memos
+    networks:
+      - frontend
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/.memos/:/var/opt/memos
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.memos.entrypoints=http
+      - traefik.http.routers.memos.rule=Host(`memos.local.example.com`)
+      - traefik.http.middlewares.memos-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.memos.middlewares=memos-https-redirect
+      - traefik.http.routers.memos-secure.entrypoints=https
+      - traefik.http.routers.memos-secure.rule=Host(`memos.local.example.com`)
+      - traefik.http.routers.memos-secure.tls=true
+      - traefik.http.routers.memos-secure.service=memos
+      - traefik.http.services.memos.loadbalancer.server.port=5230
+      - traefik.docker.network=frontend
+
+networks:
+  frontend:
+    external: true

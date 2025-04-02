@@ -1,0 +1,34 @@
+services:
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    container_name: homebox
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file:
+    - .env
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homebox.entrypoints=http"
+      - "traefik.http.routers.homebox.rule=Host(`homebox.local.example.com`)"
+      - "traefik.http.middlewares.homebox-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.homebox.middlewares=homebox-https-redirect"
+      - "traefik.http.routers.homebox-secure.entrypoints=https"
+      - "traefik.http.routers.homebox-secure.rule=Host(`homebox.local.example.com`)"
+      - "traefik.http.routers.homebox-secure.tls=true"
+      - "traefik.http.routers.homebox-secure.service=homebox"
+      - "traefik.http.services.homebox.loadbalancer.server.port=7745"
+      - "traefik.docker.network=frontend"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 100M
+        reservations:
+          cpus: '0.5'
+          memory: 15M
+networks:
+  frontend:
+    external: true

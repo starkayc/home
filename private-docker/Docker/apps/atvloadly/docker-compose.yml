@@ -1,0 +1,20 @@
+services:
+  atvloadly:
+    image: bitxeno/atvloadly:latest
+    container_name: atvloadly
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "5533:80/tcp"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data:/data
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon:/var/run/avahi-daemon
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 500M
+        reservations:
+          cpus: '0.50'
+          memory: 100M

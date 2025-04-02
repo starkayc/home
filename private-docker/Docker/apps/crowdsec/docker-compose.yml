@@ -1,0 +1,36 @@
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: crowdsec
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file:
+    - .env
+    ports:
+      - "127.0.0.1:1242:1242"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/config/acquis.yaml:/etc/crowdsec/acquis.yaml
+      - crowdsec-db:/var/lib/crowdsec/data/
+      - crowdsec-config:/etc/crowdsec/
+      - traefik_traefik-logs:/var/log/traefik/:ro
+  bouncer-traefik:
+    image: docker.io/fbonalair/traefik-crowdsec-bouncer:latest
+    container_name: bouncer-traefik
+    restart: unless-stopped
+    networks:
+      - frontend
+    depends_on:
+      - crowdsec
+    env_file:
+    - .env
+
+networks:
+  frontend:
+    external: true
+
+volumes:
+  crowdsec-db:
+  crowdsec-config:
+  traefik_traefik-logs:
+    external: true
