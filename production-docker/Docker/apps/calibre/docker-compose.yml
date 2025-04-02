@@ -1,0 +1,24 @@
+services:
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web-automated
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file:
+      - .env
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/config:/config
+      - ${USERDIR}/apps/${CONTAINER}/app_data/ingest:/cwa-book-ingest
+      - ${USERDIR}/apps/${CONTAINER}/app_data/library:/calibre-library
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+networks:
+  frontend:
+    external: true

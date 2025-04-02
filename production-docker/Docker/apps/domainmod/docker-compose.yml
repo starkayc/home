@@ -1,0 +1,35 @@
+services:
+  domainmod:
+    image: domainmod/domainmod:latest
+    container_name: domainmod_app
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - mariadb
+    env_file:
+    - .env
+    ports:
+      - "8080:80"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/application:/var/www/html
+
+  mariadb:
+    image: ghcr.io/linuxserver/mariadb:latest
+    container_name: domainmod_db
+    restart: unless-stopped
+    networks:
+      - backend
+    env_file:
+    - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/db:/config
+      
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

@@ -1,0 +1,44 @@
+services:
+  archisteamfarm:
+    image: justarchi/archisteamfarm
+    container_name: archisteamfarm
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    env_file:
+    - .env
+    ports:
+      - "127.0.0.1:1242:1242"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/config:/app/config
+      - ${USERDIR}/apps/${CONTAINER}/app_data/plugins:/app/plugins
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 300M
+  asfclaim:
+    image: ghcr.io/c4illin/asfclaim:master
+    container_name: asfclaim
+    restart: unless-stopped
+    networks:
+      - backend
+    env_file:
+    - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 100M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

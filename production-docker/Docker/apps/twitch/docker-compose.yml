@@ -1,0 +1,25 @@
+services:
+  tcpmv2-username:
+    image: rdavidoff/twitch-channel-points-miner-v2
+    container_name: tcpmv2-username
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tty: true
+    stdin_open: true
+    environment:
+      - TERM=xterm-256color
+    ports:
+      - 5000:5000
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/analytics:/usr/src/app/analytics
+      - ${USERDIR}/apps/${CONTAINER}/app_data/cookies:/usr/src/app/cookies
+      - ${USERDIR}/apps/${CONTAINER}/app_data/profiles/run.py:/usr/src/app/run.py:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 150M
+        reservations:
+          cpus: '0.50'
+          memory: 100M

@@ -1,0 +1,25 @@
+services:
+  rimgo:
+    image: codeberg.org/rimgo/rimgo
+    container_name: rimgo
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file: .env
+    user: 65534:65534
+    read_only: true
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 10M
+networks:
+  frontend:
+    external: true

@@ -1,0 +1,33 @@
+services:
+  ntfy:
+    image: binwiederhier/ntfy
+    container_name: ntfy
+    restart: unless-stopped
+    command:
+      - serve
+    user: $UID:$GID
+    networks:
+      - frontend
+    environment:
+      - TZ=$TZ
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/cache:/var/lib/ntfy
+      - ${USERDIR}/apps/${CONTAINER}/app_data/data:/etc/ntfy
+      - ${USERDIR}/apps/${CONTAINER}/app_data/data:/var/lib/ntfy
+    healthcheck:
+        test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
+        interval: 60s
+        timeout: 10s
+        retries: 3
+        start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+networks:
+  frontend:
+    external: true

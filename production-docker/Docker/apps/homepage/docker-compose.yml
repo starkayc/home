@@ -1,0 +1,16 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file:
+      - .env
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+networks:
+  frontend:
+    external: true

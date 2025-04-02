@@ -1,0 +1,46 @@
+services:
+
+  crowdsec:
+    image: crowdsecurity/crowdsec
+    container_name: crowdsec
+    restart: unless-stopped
+    networks:
+      - frontend
+    environment:
+      - GID=1000
+      - COLLECTIONS=crowdsecurity/caddy crowdsecurity/http-cve crowdsecurity/whitelist-good-actors
+      - BOUNCER_KEY_CADDY=${CROWDSEC_API_KEY}
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/logs:/var/log/caddy:ro
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    security_opt:
+      - no-new-privileges=true
+  caddy:
+    build: ./dockerfile-caddy
+    container_name: caddy
+    restart: unless-stopped
+    networks:
+      - frontend
+    environment:
+      - DOMAIN
+      - CLOUDFLARE_API_TOKEN
+      - CROWDSEC_API_KEY=${CROWDSEC_API_KEY}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/Caddyfile:/etc/caddy/Caddyfile
+      - ${USERDIR}/apps/${CONTAINER}/app_data/conf:/etc/caddy/conf
+      - ${USERDIR}/apps/${CONTAINER}/app_data/config:/config
+      - ${USERDIR}/apps/${CONTAINER}/app_data/data:/data
+      - ${USERDIR}/apps/${CONTAINER}/app_data/logs:/var/log/caddy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    security_opt:
+      - no-new-privileges=true
+
+networks:
+  frontend:
+    external: true

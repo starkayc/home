@@ -1,0 +1,30 @@
+services:
+  vencord:
+    image: vencord/backend
+    container_name: vencord_backend
+    restart: always
+    env_file:
+    - .env
+    ports:
+      - "8485:8080"
+    depends_on:
+        redis:
+             condition: service_healthy
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+
+  redis:
+    image: redis:alpine
+    container_name: vencord_redis
+    restart: always
+    env_file:
+    - .env
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/redis:/data
+    healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+    labels:
+      - com.centurylinklabs.watchtower.enable=false

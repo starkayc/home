@@ -1,0 +1,25 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend
+    environment:
+      - DOZZLE_NO_ANALYTICS=true
+      - DOZZLE_ENABLE_ACTIONS=true
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 250M
+        reservations:
+          cpus: '0.5'
+          memory: 50M
+networks:
+  frontend:
+    external: true

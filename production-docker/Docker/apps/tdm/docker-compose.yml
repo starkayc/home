@@ -1,0 +1,19 @@
+services:
+  twitchdropminer:
+    image: starkayc/twitch-drops-miner
+    container_name: tdm-username
+    restart: unless-stopped
+    ports:
+    - "5800:5800"
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/config:/TwitchDropsMiner/config
+    labels:
+      - com.centurylinklabs.watchtower.enable=false
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 500M
+        reservations:
+          cpus: '0.50'
+          memory: 250M

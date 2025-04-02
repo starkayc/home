@@ -1,0 +1,13 @@
+services:
+  calibre-web-automated-book-downloader:
+    image: lklynet/fetchly:latest
+    env_file:
+      - .env
+    ports:
+      - 8084:8084
+    restart: unless-stopped
+    volumes:
+      - ${CALIBRE}:${INGEST_DIR:-/cwa-book-ingest}
+  cloudflarebypassforscraping:
+    image: ghcr.io/sarperavci/cloudflarebypassforscraping:latest
+    restart: unless-stopped

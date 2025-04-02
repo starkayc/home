@@ -1,0 +1,27 @@
+version: "3"
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    network_mode: vpn
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - NET_ADMIN
+    env_file:
+      - .env
+    ports:
+      - 8888:8888/tcp
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data:/gluetun
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
+        reservations:
+          cpus: '0.25'
+          memory: 100M

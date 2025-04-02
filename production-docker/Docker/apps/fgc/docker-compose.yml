@@ -1,0 +1,22 @@
+services:
+  fgc-username:
+    image: ghcr.io/vogler/free-games-claimer:latest
+    container_name: fgc-username
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command: bash -c " node prime-gaming; node gog; echo sleeping; sleep 1d"
+    env_file:
+      - .env
+    ports:
+      - 6080:6080
+    volumes:
+      - ${USERDIR}/apps/${CONTAINER}/app_data/profiles/username:/fgc/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 612M
+        reservations:
+          cpus: '0.25'
+          memory: 100M
