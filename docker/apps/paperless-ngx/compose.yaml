@@ -1,0 +1,99 @@
+services:
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless-ngx
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - paperless-ngx-postgres
+      - paperless-ngx-redis
+    env_file:
+      - .env
+    volumes:
+      - ./app_data/data:/usr/src/paperless/data
+      - ./app_data/media:/usr/src/paperless/media
+      - ./app_data/export:/usr/src/paperless/export
+      - ./app_data/consume:/usr/src/paperless/consume
+      - ./app_data/scripts:/usr/src/paperless/scripts
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  paperless-ngx-redis:
+    image: valkey/valkey:8
+    container_name: paperless-ngx-redis
+    restart: unless-stopped
+    networks:
+      - backend
+    volumes:
+      - ./app_data/redis:/data
+
+  paperless-ngx-postgres:
+    image: docker.io/library/postgres:17
+    container_name: paperless-ngx-postgres
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    env_file:
+      - .env
+    volumes:
+      - ./app_data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paperless-ngx-gotenberg:
+    image: docker.io/gotenberg/gotenberg:8.20
+    container_name: paperless-ngx-gotenberg
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+
+  paperless-ngx-tika:
+    image: docker.io/apache/tika:latest
+    container_name: paperless-ngx-tika
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+  paperless-gpt:
+      image: ghcr.io/icereed/paperless-gpt:latest
+      container_name: paperless-ngx-gpt
+      security_opt:
+        - no-new-privileges:true
+      networks:
+        - backend
+      depends_on:
+        - paperless-ngx
+      env_file:
+        - .env
+      ports:
+        - "8088:8080"
+      volumes:
+        - ./app_data/gpt/prompts:/app/prompts
+        - ./app_data/gpt/hocr:/app/hocr
+        - ./app_data/gpt/pdf:/app/pdf
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

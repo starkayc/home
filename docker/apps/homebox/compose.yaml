@@ -1,0 +1,17 @@
+services:
+
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    container_name: homebox
+    restart: unless-stopped
+    user: 1000:1000
+    networks:
+      - frontend
+    env_file:
+    - .env
+    volumes:
+      - ./app_data:/data
+
+networks:
+  frontend:
+    external: true

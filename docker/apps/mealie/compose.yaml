@@ -1,0 +1,37 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    env_file:
+    - .env
+    volumes:
+      - ./app_data/data:/app/data
+    depends_on:
+      mealie-db:
+        condition: service_healthy
+
+  mealie-db:
+    container_name: mealie_postgres
+    image: postgres:15
+    restart: always
+    networks:
+      - backend
+    env_file:
+      - .env
+    volumes:
+      - ./app_data/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mealie"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

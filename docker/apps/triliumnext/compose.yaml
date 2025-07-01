@@ -1,0 +1,14 @@
+services:
+  trilium:
+    image: triliumnext/notes:latest
+    container_name: notes
+    restart: unless-stopped
+    networks:
+      - frontend
+    volumes:
+      - ./app_data/trilium-data:/home/node/trilium-data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+networks:
+  frontend:
+    external: true

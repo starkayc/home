@@ -1,0 +1,35 @@
+services:
+  actual_server:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: actual-server
+    user: 1000:1000
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - ./app_data/:/data
+    healthcheck:
+      test: ["CMD-SHELL", "node src/scripts/health-check.js"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+      
+  actual-ai:
+    image: docker.io/sakowicz/actual-ai:latest
+    container_name: actual-ai
+    user: 1000:1000
+    restart: unless-stopped
+    networks:
+      - backend
+    env_file:
+    - .env
+    volumes:
+      - ./app_data/ai:/data
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true

@@ -1,0 +1,21 @@
+services:
+  filebrowser:
+    image: gtstef/filebrowser
+    container_name: filebrowser
+    user: filebrowser
+    restart: unless-stopped
+    networks:
+      - frontend
+    env_file:
+    - .env
+    ports:
+      - "1000:80"
+    volumes:
+      - ./app_data/downloads:/downloads
+      - ./app_data/usb:/usb
+      - ./app_data/data:/home/filebrowser/data
+      - ./app_data/tmp/:/home/filebrowser/tmp
+
+networks:
+  frontend:
+    external: true

@@ -1,0 +1,16 @@
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+    - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+networks:
+  frontend:
+    external: true
