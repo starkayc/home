@@ -1,0 +1,51 @@
+services:
+  socket-proxy:
+    image: 11notes/socket-proxy:2.1.6
+    container_name: socket-proxy
+    read_only: true
+    user: '0:0'
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:docker-moby'
+    environment:
+      - TZ=Etc/UTC
+    volumes:
+      - '/run/docker.sock:/run/docker.sock:ro'
+      - 'socket-proxy.run:/run/proxy'
+    networks:
+      backend_net:
+    restart: always
+
+  dozzle:
+    depends_on:
+      socket-proxy:
+        condition: service_healthy
+        restart: true
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:dozzle'
+    environment:
+      - DOZZLE_NO_ANALYTICS=true
+      - DOZZLE_ENABLE_ACTIONS=true
+    volumes:
+      - 'socket-proxy.run:/var/run'
+    networks:
+      frontend_net:
+      backend_net:
+    restart: always
+
+volumes:
+  socket-proxy.run:
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true

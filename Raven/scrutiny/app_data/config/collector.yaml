@@ -1,0 +1,8 @@
+version: 1
+host:
+  id: ""
+devices:
+  - device: /dev/sata1
+    type: 'sat'
+  - device: /dev/sata2
+    type: 'sat'

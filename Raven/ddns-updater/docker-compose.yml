@@ -1,0 +1,27 @@
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater:latest
+    container_name: ddns-updater
+    user: 1032:100
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:ddns-updater'
+      - 'wud.link.template=https://github.com/qdm12/ddns-updater/releases/tag/$${major}.$${minor}.$${patch}'
+    env_file:
+      - ./envs/ddns.env
+    volumes:
+      - ./app_data:/updater/data
+    healthcheck:
+      test: curl --fail http://localhost:3000/health || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s 
+    networks:
+      frontend_net:
+    restart: always
+
+networks:
+  frontend_net:
+    driver: bridge

@@ -1,0 +1,66 @@
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec
+    container_name: crowdsec
+    security_opt:
+      - no-new-privileges=true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:crowdsec'
+    env_file:
+      - ./envs/crowdsec.env
+    volumes:
+      - './app_data/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml'
+      - './app_data/crowdsec:/etc/crowdsec'
+      - './app_data/crowdsec/db:/var/lib/crowdsec/data'
+    networks:
+      reverse_proxy_net:
+    restart: always
+
+  caddy:
+    image: starkayc/caddy:2.10.2
+    container_name: caddy
+    security_opt:
+      - no-new-privileges=true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:caddy'
+    env_file:
+      - ./envs/caddy.env
+    ports:
+      - '880:80'
+      - '4443:443'
+      - '4443:443/udp'
+    volumes:
+      - './app_data/Caddyfile:/etc/caddy/Caddyfile'
+      - './app_data/conf:/etc/caddy/conf'
+      - './app_data/config:/config'
+      - './app_data/data:/data'
+    networks:
+      reverse_proxy_net:
+        ipv4_address: 192.168.60.11
+      dozzle_frontend_net:
+      ddns-updater_frontend_net:
+      scrutiny_frontend_net:
+      wud_frontend_net:
+    restart: always
+
+networks:
+  reverse_proxy_net:
+    driver: macvlan
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: '192.168.60.0/24'
+          gateway: '192.168.60.1'
+  dozzle_frontend_net:
+    external: true
+  ddns-updater_frontend_net:
+    external: true
+  scrutiny_frontend_net:
+    external: true
+  wud_frontend_net:
+    external: true

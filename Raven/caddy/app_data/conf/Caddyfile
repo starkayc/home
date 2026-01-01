@@ -1,0 +1,16 @@
+{
+	admin off
+	servers {
+		trusted_proxies cloudflare
+		client_ip_headers Cf-Connecting-Ip X-Forwarded-For
+	}
+	order crowdsec before respond
+	crowdsec {
+		api_url http://crowdsec:8080
+		api_key {$CROWDSEC_API_KEY}
+		ticker_interval 5s
+		appsec_url http://crowdsec:7422
+	}
+}
+
+import conf/sites/example.com

@@ -1,0 +1,27 @@
+services:
+  scrutiny:
+    image: ghcr.io/analogj/scrutiny:master-omnibus
+    container_name: scrutiny
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.link.template=https://github.com/AnalogJ/scrutiny/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.display.icon=sh:scrutiny'
+    env_file:
+      - ./envs/scrutiny.env
+    cap_add:
+      - SYS_RAWIO
+    volumes:
+      - '/run/udev:/run/udev:ro'
+      - './app_data/config:/opt/scrutiny/config'
+      - './app_data/influxdb:/opt/scrutiny/influxdb'
+    devices:
+      - '/dev/sata1:/dev/sata1'
+      - '/dev/sata2:/dev/sata2'
+    networks:
+      frontend_net:
+    restart: unless-stopped
+
+networks:
+  frontend_net:
+    driver: bridge
