@@ -1,0 +1,32 @@
+services:
+  qbit_manage:
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1536M
+        reservations:
+          cpus: '0.5'
+          memory: 250M
+    image: ghcr.io/stuffanthings/qbit_manage:latest
+    container_name: qbit_manage
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:qbit-manage'
+      - 'wud.link.template=https://github.com/StuffAnThings/qbit_manage/releases/tag/$${major}.$${minor}.$${patch}'
+    env_file:
+      - ./envs/qbit_manage.env
+    volumes:
+      - './app_data:/config:rw'
+      - '/home/dummy/docker/apps/qbittorrent/app_data/var:/qbittorrent:ro'
+      - '/mnt/dontpissmeoff/torrents:/mnt/dontpissmeoff/torrents:rw'
+    ports:
+      - '8082:8080'
+    networks:
+      seedbox:
+    restart: unless-stopped
+
+networks:
+  seedbox:
+    external: true

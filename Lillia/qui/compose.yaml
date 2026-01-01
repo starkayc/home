@@ -1,0 +1,28 @@
+services:
+  qui:
+    image: ghcr.io/autobrr/qui:latest
+    container_name: qui
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:qui'
+      - 'wud.link.template=https://github.com/autobrr/qui/releases/tag/$${major}.$${minor}.$${patch}'
+    env_file:
+      - ./envs/qui.env
+    secrets:
+      - session_secret
+    volumes:
+      - './app_data/config:/config'
+    ports:
+      - '3003:7476'
+    networks:
+      seedbox:
+    restart: unless-stopped
+    
+secrets:
+  session_secret:
+    file: ./secrets/session_secret.txt
+
+networks:
+  seedbox:
+    external: true

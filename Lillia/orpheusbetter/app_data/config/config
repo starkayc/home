@@ -1,0 +1,13 @@
+[orpheus]
+username = dummy
+password = dummy
+data_dir = /data/raw
+output_dir = /data/transcodes
+torrent_dir = /data/torrents
+formats = flac, v0, 320
+media = cd, vinyl, web
+24bit_behaviour = 0
+tracker = https://home.opsfet.ch/
+mode = both
+api = https://orpheus.network/
+source = OPS

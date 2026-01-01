@@ -1,0 +1,23 @@
+services:
+  periphery:
+    image: ghcr.io/moghtech/komodo-periphery:latest
+    container_name: komodo-periphery
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:komodo'
+    env_file:
+      - ./envs/komodo.env
+    secrets:
+      - periphery_passkeys
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/proc:/proc'
+      - '/home/dummy/docker:/home/dummy/docker'
+    ports:
+      - '8120:8120'
+    restart: always
+
+secrets:
+  periphery_passkeys:
+    file: ./secrets/periphery_passkeys.txt

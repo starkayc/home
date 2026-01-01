@@ -1,0 +1,35 @@
+services:
+  qbittorrent:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'  
+          memory: 3G
+        reservations:
+          memory: 2G
+    image: ghcr.io/11notes/qbittorrent:5.1.4
+    container_name: qbittorrent
+    read_only: true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:qbittorrent'
+    environment:
+      TZ: "UTC/Etc"
+    volumes:
+      - './app_data/etc:/qbittorrent/etc'
+      - './app_data/var:/qbittorrent/var'
+      - './app_data/incomplete:/incomplete'
+      - './app_data/themes:/themes'
+      - '/mnt:/mnt'
+    ports:
+      - '3000:3000/tcp'
+      - '50386:50386/tcp'
+      - '50386:50386/udp'
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+networks:
+  seedbox:
+    external: true

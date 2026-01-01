@@ -1,0 +1,12 @@
+services:
+  orpheusmorebetter:
+    image: ghcr.io/starkayc/orpheusmorebetter:1.0.0
+    container_name: orpheusmorebetter
+    environment:
+      - TZ=Etc/UTC
+    volumes:
+      - '/mnt/dontpissmeoff/torrents/ops:/data/raw:ro' # directory where your source FLACs are stored.
+      - './app_data/config:/config/.orpheusmorebetter' # directory where your config are stored.
+      - '/mnt/dontpissmeoff/watch/ops:/data/torrents'
+      - '/mnt/dontpissmeoff/torrents/ops:/data/transcodes'
+    restart: on-failure:10

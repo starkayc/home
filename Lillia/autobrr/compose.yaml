@@ -1,0 +1,61 @@
+services:
+  autobrr:
+    depends_on:
+      autobrr-postgres:
+        condition: service_healthy
+    image: ghcr.io/autobrr/autobrr:latest
+    container_name: autobrr
+    user: 1000:1000
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.link.template=https://github.com/autobrr/autobrr/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.display.icon=sh:autobrr'
+    env_file:
+      - ./envs/autobrr.env
+    secrets:
+      - postgres_password
+    volumes:
+      - './app_data/config:/config'
+      - '/mnt:/mnt'
+    ports:
+      - '3001:7474'
+    networks:
+      seedbox:
+    restart: unless-stopped
+
+  autobrr-postgres:
+    image: postgres:14-alpine
+    container_name: autobrr-postgres
+    user: 1000:1000
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+-alpine$$'
+      - 'wud.display.icon=sh:postgresql'
+    env_file:
+      - ./envs/postgres.env
+    secrets:
+      - postgres_password
+    volumes:
+      - './app_data/db:/var/lib/postgresql/data'
+    networks:
+      seedbox:
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "autobrr", "-d", "autobrr"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+networks:
+  seedbox:
+    external: true
