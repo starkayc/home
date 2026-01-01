@@ -45,7 +45,7 @@ services:
     networks:
       seedbox:
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "autobrr", "-d", "autobrr"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 30s
       timeout: 20s
       retries: 5
