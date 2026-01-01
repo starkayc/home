@@ -1,0 +1,18 @@
+services:
+  rimgo:
+    image: codeberg.org/rimgo/rimgo
+    container_name: rimgo
+    user: 65534:65534
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+    env_file:
+      - ./envs/rimgo.env
+    ports:
+      - '127.0.0.1:5466:5466'
+    restart: unless-stopped

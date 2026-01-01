@@ -1,0 +1,9 @@
+services:
+  it-tools:
+    image: ghcr.io/corentinth/it-tools:latest
+    container_name: it-tools
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - '127.0.0.1:2577:80'
+    restart: unless-stopped

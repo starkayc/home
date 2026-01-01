@@ -1,0 +1,106 @@
+colorize_logs: true
+# Levels are: none, fatal, error, warn, notice, info, debug and trace
+log_level: "info"
+
+# File paths, you generally don't need to change this
+files: "./data/files/"
+thumbnails: "./data/thumbnails/"
+db: "./data/db/"
+
+size_limit: 512
+enable_checksums: false
+
+files_per_ip: 32
+rate_limit_period: 20
+filename_length: 5
+abuse_email: "abuse@example.com"
+
+# In hours (168 = 7 days)
+delete_files_after: 168
+# In seconds
+delete_files_check: 1800
+delete_key_length: 4
+
+# http server
+server:
+  port: 7828
+  host: 0.0.0.0
+  # Enabling the unix socket will disable port binding
+  #unix_socket: "/tmp/patchy.sock"
+
+thumbnail_generation:
+  enabled: false
+  resolution:
+    max_height: 720
+    max_width: 720
+
+# To restrict Tor exit nodes and VPN providers IP addresses from uploading
+# content to the uploader. Sometimes they can be an annoyance, legally speaking.
+ip_block:
+  tor:
+    enabled: true
+    update_interval: 3600
+  vpn:
+    enabled: false
+    update_interval: 86400
+    # Providers supported:
+    # "Mullvad", "AirVPN"
+    providers: []
+
+admin:
+  enabled: false
+  api_key: "dummy"
+
+# S3 Support to upload the files to a S3 bucket.
+# Thumbnail generation will not run when using a S3 bucket
+s3:
+  enabled: false
+  region: auto
+  key: "dummy"
+  secret: "dummy"
+  endpoint: "https://example.com"
+
+# Uses more memory, but improves files retrieval and reduces stress on the drive
+cache:
+  enabled: false
+  # Type of cache
+  # This can be LRU (Least Recently Used) or a Redis compatible database.
+  # LRU is recommended, but if you are using a distributed Patchy setup, Redis
+  # may be a better option to share the cache across different Patchy processes.
+  # types: "lru", "redis"
+  type: "redis"
+  # The redis URL to connect to the Redis compatible database.
+  # Example: "tcp://127.0.0.1:6379"
+  # If it's empty, it will default to "localhost:6379"
+  redis_url: "patchy-valkey:6379"
+
+# Modify what is shown on the different pages
+views:
+  index:
+    site_info: "Welcome to Patchy - A temporary file uploader"
+    show_title: true
+    show_file_count: true
+    show_version: true
+    navbar:
+      enabled: true
+      show_uploader_configs: true
+      show_upload_history: true
+      show_settings: false
+      show_admin: false
+      show_login: false
+  show_file:
+    autoplay_video: true
+    autoplay_audio: true
+
+blocked_extensions:
+  - "exe"
+  - "scr"
+  - "cpl"
+  - "doc"
+  - "jar"
+  - "php"
+alternative_domains:
+  - "example.com"
+  - "i.example.com"
+  - "pat.example.com"
+  - "example.lol"

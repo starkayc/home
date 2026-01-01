@@ -1,0 +1,80 @@
+services:
+  umami:
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    init: true
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:umami'
+      - 'wud.link.template=https://github.com/umami-software/umami/releases/tag/$${major}.$${minor}.$${patch}'
+    env_file:
+      - ./envs/umami.env
+    volumes:
+      - './app_data/config:/app/config'
+    ports:
+      - '127.0.0.1:3000:3000'
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3000/api/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+
+  umami-db:
+    image: postgres:15-alpine
+    container_name: umami-db
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:postgresql'
+    env_file:
+      - ./envs/postgres.env
+    secrets:
+      - postgres_password
+    volumes:
+      - './app_data/database:/var/lib/postgresql/data'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+  umami-valkey:
+    image: valkey/valkey:8-alpine
+    container_name: umami-valkey
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=si:valkey'
+      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${major}.$${minor}.$${patch}'
+    volumes:
+      - './app_data/valkey:/data'
+    healthcheck:
+        test: ["CMD", "valkey-cli", "ping"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true

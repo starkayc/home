@@ -1,0 +1,23 @@
+services:
+  wud:
+    image: ghcr.io/getwud/wud
+    container_name: wud
+    labels:
+      - 'wud.watch=true'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=sh:wud'
+      - 'wud.link.template=https://github.com/getwud/wud/releases/tag/$${major}.$${minor}.$${patch}'
+    env_file:
+      - ./envs/wud.env
+    secrets:
+      - pushover_user
+      - pushover_token
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    restart: unless-stopped
+
+secrets:
+  pushover_user:
+    file: ./secrets/pushover_user.txt
+  pushover_token:
+    file: ./secrets/pushover_token.txt
