@@ -3,13 +3,13 @@ services:
     depends_on:
         valkey:
              condition: service_healthy
-    image: ghcr.io/vencord/vencloud
+    image: ghcr.io/vencord/vencloud:v0.0.1
     container_name: vencord_backend
     labels:
       - 'wud.watch=true'
-      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
-      - 'wud.display.icon=si:vencloud'
-      - 'wud.link.template=https://github.com/Vencord/Vencloud/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.tag.include=^v\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:discord'
+      - 'wud.link.template=https://github.com/Vencord/Vencloud/releases/tag/$${original}'
     env_file:
       - ./envs/vencloud.env
     ports:
@@ -17,15 +17,17 @@ services:
     restart: always
 
   valkey:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9.0.1
     container_name: vencord_valkey
     labels:
       - 'wud.watch=true'
-      - 'wud.tag.include=^\d+\.\d+\.\d+-alpine$$'
-      - 'wud.display.icon=si:valkey'
-      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.display.icon=hl:valkey'
+      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${original}'
+    env_file:
+      - ./envs/valkey.env
     volumes:
-      - './app_data/valkey:/data'
+      - ./app_data/valkey:/data
     healthcheck:
         test: ["CMD", "valkey-cli", "ping"]
         interval: 5s

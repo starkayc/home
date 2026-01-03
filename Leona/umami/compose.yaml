@@ -3,18 +3,18 @@ services:
     depends_on:
       umami-db:
         condition: service_healthy
-    image: ghcr.io/umami-software/umami:postgresql-latest
+    image: ghcr.io/umami-software/umami:3.0.3
     container_name: umami
     init: true
     labels:
       - 'wud.watch=true'
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
       - 'wud.display.icon=sh:umami'
-      - 'wud.link.template=https://github.com/umami-software/umami/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.link.template=https://github.com/umami-software/umami/releases/tag/v$${original}'
     env_file:
       - ./envs/umami.env
     volumes:
-      - './app_data/config:/app/config'
+      - ./app_data/config:/app/config
     ports:
       - '127.0.0.1:3000:3000'
     healthcheck:
@@ -32,14 +32,15 @@ services:
     container_name: umami-db
     labels:
       - 'wud.watch=true'
-      - 'wud.tag.include=^\d+\.\d+\.\d+$$'
+      - 'wud.tag.include=^\d+-alpine$'
+      - 'wud.tag.exclude=^(1[6-9]|[2-9]\d+)-alpine$'
       - 'wud.display.icon=sh:postgresql'
     env_file:
       - ./envs/postgres.env
     secrets:
       - postgres_password
     volumes:
-      - './app_data/database:/var/lib/postgresql/data'
+      - ./app_data/database:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -50,15 +51,15 @@ services:
     restart: unless-stopped
 
   umami-valkey:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9.0.1
     container_name: umami-valkey
     labels:
       - 'wud.watch=true'
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
       - 'wud.display.icon=si:valkey'
-      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${original}'
     volumes:
-      - './app_data/valkey:/data'
+      - ./app_data/valkey:/data
     healthcheck:
         test: ["CMD", "valkey-cli", "ping"]
         interval: 5s
@@ -75,6 +76,7 @@ secrets:
 networks:
   frontend_net:
     driver: bridge
+
   backend_net:
     driver: bridge
     internal: true

@@ -6,16 +6,15 @@ services:
       - 'wud.watch=true'
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
       - 'wud.display.icon=sh:wud'
-      - 'wud.link.template=https://github.com/getwud/wud/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.link.template=https://github.com/getwud/wud/releases/tag/$${original}'
     env_file:
       - ./envs/wud.env
     secrets:
       - pushover_user
       - pushover_token
     volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock'
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
-
 secrets:
   pushover_user:
     file: ./secrets/pushover_user.txt

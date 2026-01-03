@@ -4,26 +4,26 @@ services:
       - patchy-valkey
     mem_limit: 512MB
     cpus: 0.5
-    #image: git.nadeko.net/fijxu/patchy:latest
+#    image: git.nadeko.net/fijxu/patchy:latest
     image: patchy
     container_name: patchy
     volumes:
-      - './app_data/data:/data'
-      - './app_data/config.yml:/patchy/config/config.yml:ro'
+      - ./app_data/data:/data
+      - ./app_data/config.yml:/patchy/config/config.yml:ro
     ports:
-      - '127.0.0.1:7828:7828'
+      - 127.0.0.1:7828:7828
     restart: unless-stopped
 
   patchy-valkey:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9.0.1
     container_name: patchy-valkey
     labels:
       - 'wud.watch=true'
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'
-      - 'wud.display.icon=si:redis'
-      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${major}.$${minor}.$${patch}'
+      - 'wud.display.icon=si:valkey'
+      - 'wud.link.template=https://github.com/valkey-io/valkey/releases/tag/$${original}'
     volumes:
-      - './app_data/valkey:/data'
+      - ./app_data/valkey:/data
     healthcheck:
         test: ["CMD", "valkey-cli", "ping"]
         interval: 5s
