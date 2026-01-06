@@ -1,0 +1,25 @@
+# Date Section
+DATE=$(date +"%Y%m%d-%H%M")
+PO_DATE=$(date +"%a %d %b %Y %r")
+
+# Pushover Section
+PUSHOVER_USER=dummy
+PUSHOVER_TOKEN=dummy
+
+# Rclone Section
+LOCALDIR="/volume1/"
+BUCKET="backy-crypt"
+OPERATION_MODE="sync"
+TRANSFER_LIMIT="8"
+CUSTOM_FLAGS="--fast-list"
+PROGRESS_FLAG="--stats=10s --stats-one-line"
+RETRIES="3"
+RETRY_DELAY="5"
+CHECKERS="8"
+EXCLUDE_PATTERNS="Thumbs.db,*.db,*.db@SynoEAStream,@eaDir/**,@SynoResource/**,#recycle/**,*.DS_Store,*.lnk"
+EXCLUDE_FLAGS=""
+IFS=',' read -ra PATTERNS <<< "$EXCLUDE_PATTERNS"
+for p in "${PATTERNS[@]}"; do
+    EXCLUDE_FLAGS="$EXCLUDE_FLAGS --exclude=$p"
+done
+OPTS="--transfers=$TRANSFER_LIMIT $CUSTOM_FLAGS $PROGRESS_FLAG --retries=$RETRIES --retries-sleep=${RETRY_DELAY}s --checkers=$CHECKERS $EXCLUDE_FLAGS -v"
