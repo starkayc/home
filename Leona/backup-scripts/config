@@ -1,6 +1,8 @@
-# Umami Section
+# Date Section
 DATE=$(date +"%Y%m%d-%H%M")
 PO_DATE=$(date +"%a %d %b %Y %r")
+
+# Umami Section
 UMAMI_B2_PATH="umami/pg"
 UMAMI_BACKUP_DIR="$HOME/backup-scripts"
 UMAMI_PG_CONTAINER="dummy"
@@ -21,14 +23,31 @@ B2_PATH="docker"
 OPERATION_MODE="copy"
 TRANSFER_LIMIT="8"
 CUSTOM_FLAGS="--fast-list"
-PROGRESS_FLAG="--stats=10s --stats-one-line"
+PROGRESS_STATS="--stats=10s"
+PROGRESS_ONE_LINE="--stats-one-line"
 RETRIES="3"
 RETRY_DELAY="5"
 CHECKERS="8"
-EXCLUDE_PATTERNS="app_data/**,.git/**,locales/**,old_src/**,public/**,src/**"
-EXCLUDE_FLAGS=""
-IFS=',' read -ra PATTERNS <<< "$EXCLUDE_PATTERNS"
-for p in "${PATTERNS[@]}"; do
-    EXCLUDE_FLAGS="$EXCLUDE_FLAGS --exclude=$p"
+EXCLUDE_PATTERNS=(
+    "app_data/**"
+    ".git/**"
+    "locales/**"
+    "old_src/**"
+    "public/**"
+    "src/**"
+)
+
+RCLONE_OPTS=(
+    "--transfers=$TRANSFER_LIMIT"
+    "$CUSTOM_FLAGS"
+    "$PROGRESS_STATS"
+    "$PROGRESS_ONE_LINE"
+    "--retries=$RETRIES"
+    "--retries-sleep=${RETRY_DELAY}s"
+    "--checkers=$CHECKERS"
+    "-v"
+)
+
+for p in "${EXCLUDE_PATTERNS[@]}"; do
+    RCLONE_OPTS+=("--exclude=$p")
 done
-OPTS="--transfers=$TRANSFER_LIMIT $CUSTOM_FLAGS $PROGRESS_FLAG --retries=$RETRIES --retries-sleep=${RETRY_DELAY}s --checkers=$CHECKERS $EXCLUDE_FLAGS -v"

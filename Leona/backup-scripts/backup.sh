@@ -1,7 +1,9 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Get the directory where the script is running
-SCRIPT_DIR="$HOME/backup-scripts"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Configuration file path
 CONFIG_FILE="$SCRIPT_DIR/config"
@@ -14,30 +16,39 @@ else
     exit 1
 fi
 
-# Ensure required environment variables are set
-if [ -z "$PUSHOVER_USER" ] || [ -z "$PUSHOVER_TOKEN" ]; then
-    echo "Pushover credentials are not set. Exiting."
-    exit 1
-fi
+log() {
+    echo "[$(date)] $*"
+}
 
-if [ -z "$OPERATION_MODE" ] || [ -z "$OPTS" ]; then
-    echo "Rclone options are not set. Exiting."
-    exit 1
-fi
+require_env() {
+    local name="$1"
+    if [ -z "${!name:-}" ]; then
+        log "Missing required config: $name"
+        exit 1
+    fi
+}
+
+# Ensure required environment variables are set
+require_env "PUSHOVER_USER"
+require_env "PUSHOVER_TOKEN"
+require_env "OPERATION_MODE"
+require_env "RCLONE_OPTS"
 
 # Pushover function
 send_pushover() {
     local title="$1"
     local message="$2"
     local formatted_message
-    formatted_message=$(echo -e "$message")
+    formatted_message=$(printf '%b' "$message")
 
-    curl -s -o /dev/null \
+    if ! curl -s -o /dev/null \
         -F "user=$PUSHOVER_USER" \
         -F "token=$PUSHOVER_TOKEN" \
         -F "title=$title" \
         -F "message=$formatted_message" \
-        https://api.pushover.net/1/messages.json
+        https://api.pushover.net/1/messages.json; then
+        log "Pushover notification failed: $title"
+    fi
 }
 
 # Backup function
@@ -46,14 +57,14 @@ run_backup() {
     local dest="$2"
     local label="$3"
 
-    echo "[$(date)] Backing up $label."
+    log "Backing up $label."
     
-    if rclone $OPERATION_MODE "$source" "$dest" $OPTS; then
-        echo "[$(date)] $label backup completed successfully."
-        send_pushover "$(hostname): Rclone Backup Completed ✅" "[$PO_DATE]\nAn backup of $label has completed successfully!"
+    if rclone "$OPERATION_MODE" "$source" "$dest" "${RCLONE_OPTS[@]}"; then
+        log "$label backup completed successfully."
+        send_pushover "$(hostname): Rclone Backup Completed ✅" "[$PO_DATE]\nA backup of $label has completed successfully!"
     else
-        echo "[$(date)] $label backup failed."
-        send_pushover "$(hostname): Rclone Backup Failed ❌" "[$PO_DATE]\nAn backup of $label has failed!"
+        log "$label backup failed."
+        send_pushover "$(hostname): Rclone Backup Failed ❌" "[$PO_DATE]\nA backup of $label has failed!"
     fi
 }
 
@@ -63,29 +74,46 @@ run_umami() {
     local dest="$2"
     local label="$3"
 
+    require_env "UMAMI_BACKUP_DIR"
+    require_env "UMAMI_PG_CONTAINER"
+    require_env "UMAMI_PG_PASSWORD"
+    require_env "UMAMI_PG_USER"
+    require_env "UMAMI_PG_DB"
+    require_env "UMAMI_SQL_FILE"
+    require_env "UMAMI_TAR_FILE"
+    require_env "BUCKET"
+
     mkdir -p "$UMAMI_BACKUP_DIR"
 
-    echo "[$(date)] Creating PostgreSQL dump."
-    docker exec \
+    log "Creating PostgreSQL dump."
+    if ! docker exec \
         -e PGPASSWORD="$UMAMI_PG_PASSWORD" \
         "$UMAMI_PG_CONTAINER" \
-        pg_dump -U "$UMAMI_PG_USER" "$UMAMI_PG_DB" > "$UMAMI_SQL_FILE"
+        pg_dump -U "$UMAMI_PG_USER" "$UMAMI_PG_DB" > "$UMAMI_SQL_FILE"; then
+        log "PostgreSQL dump failed."
+        send_pushover "$(hostname): $label Failed ❌" "[$PO_DATE]\nA backup of $label has failed!"
+        return 1
+    fi
 
-    echo "[$(date)] Creating tar file."
-    tar -zcf "$UMAMI_TAR_FILE" -C "$UMAMI_BACKUP_DIR" "$(basename "$UMAMI_SQL_FILE")"
+    log "Creating tar file."
+    if ! tar -zcf "$UMAMI_TAR_FILE" -C "$UMAMI_BACKUP_DIR" "$(basename "$UMAMI_SQL_FILE")"; then
+        log "Tar creation failed."
+        send_pushover "$(hostname): $label Failed ❌" "[$PO_DATE]\nA backup of $label has failed!"
+        return 1
+    fi
 
-    echo "[$(date)] Removed $(basename "$UMAMI_SQL_FILE")"
+    log "Removed $(basename "$UMAMI_SQL_FILE")"
     rm "$UMAMI_SQL_FILE"
 
-    echo "[$(date)] Uploading to $BUCKET."
+    log "Uploading to $BUCKET."
 
-    if rclone $OPERATION_MODE "$source" "$dest" $OPTS; then
+    if rclone "$OPERATION_MODE" "$source" "$dest" "${RCLONE_OPTS[@]}"; then
         rm "$UMAMI_TAR_FILE"
-        echo "[$(date)] Backup completed and $(basename "$UMAMI_TAR_FILE") has been removed."
-        send_pushover "$(hostname): $label Completed ✅" "[$PO_DATE]\nAn backup of $(basename "$UMAMI_TAR_FILE") has completed successfully!"
+        log "Backup completed and $(basename "$UMAMI_TAR_FILE") has been removed."
+        send_pushover "$(hostname): $label Completed ✅" "[$PO_DATE]\nA backup of $(basename "$UMAMI_TAR_FILE") has completed successfully!"
     else
-        echo "[$(date)] Upload failed and file has been retained!"
-        send_pushover "$(hostname): $label Failed ❌" "[$PO_DATE]\nAn backup of $(basename "$UMAMI_TAR_FILE") has failed!"
+        log "Upload failed and file has been retained!"
+        send_pushover "$(hostname): $label Failed ❌" "[$PO_DATE]\nA backup of $(basename "$UMAMI_TAR_FILE") has failed!"
     fi
 }
 
@@ -94,4 +122,4 @@ run_backup "$DOCKERDIR" "$BUCKET:$B2_PATH" "Docker folder"
 
 run_umami "$UMAMI_TAR_FILE" "$BUCKET:$UMAMI_B2_PATH" "Umami Backup"
 
-echo "[$(date)] All tasks finished."
+log "All tasks finished."
