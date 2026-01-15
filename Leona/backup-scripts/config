@@ -22,9 +22,8 @@ BUCKET="backy-crypt"
 B2_PATH="docker"
 OPERATION_MODE="copy"
 TRANSFER_LIMIT="8"
-CUSTOM_FLAGS="--fast-list"
-PROGRESS_STATS="--stats=10s"
-PROGRESS_ONE_LINE="--stats-one-line"
+CUSTOM_FLAGS=(--fast-list)
+PROGRESS_FLAG=(--stats=10s --stats-one-line)
 RETRIES="3"
 RETRY_DELAY="5"
 CHECKERS="8"
@@ -37,17 +36,18 @@ EXCLUDE_PATTERNS=(
     "src/**"
 )
 
+EXCLUDE_FLAGS=()
+for p in "${EXCLUDE_PATTERNS[@]}"; do
+    EXCLUDE_FLAGS+=("--exclude=$p")
+done
+
 RCLONE_OPTS=(
     "--transfers=$TRANSFER_LIMIT"
-    "$CUSTOM_FLAGS"
-    "$PROGRESS_STATS"
-    "$PROGRESS_ONE_LINE"
+    "${CUSTOM_FLAGS[@]}"
+    "${PROGRESS_FLAG[@]}"
     "--retries=$RETRIES"
     "--retries-sleep=${RETRY_DELAY}s"
     "--checkers=$CHECKERS"
-    "-v"
+    "${EXCLUDE_FLAGS[@]}"
+    -v
 )
-
-for p in "${EXCLUDE_PATTERNS[@]}"; do
-    RCLONE_OPTS+=("--exclude=$p")
-done
