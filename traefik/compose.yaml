@@ -1,0 +1,115 @@
+services:
+  traefik:
+    image: traefik:v3.7.14@sha256:575fa15b135078fe5e50aa847987d96dbddd7b093c172429618404df73f3fa7c
+    container_name: traefik
+    security_opt:
+      - no-new-privileges:true
+    secrets:
+      - cf_api_token
+    env_file: .env
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/cf_api_token
+      TRAEFIK_DASHBOARD_CREDENTIALS: ${TRAEFIK_DASHBOARD_CREDENTIALS}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - socket-proxy.run:/var/run
+      - ./app_data/data/traefik.yml:/traefik.yml:ro
+      - ./app_data/data/acme.json:/acme.json
+      - ./app_data/dynamic:/configs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      backend_net:
+      reverse_proxy_net:
+      arcane_frontend_net:
+      databasus_frontend_net:
+      dispatcharr_frontend_net:
+      dozzle_frontend_net:
+      immich_frontend_net:
+      karakeep_frontend_net:
+      paperless-ngx_frontend_net:
+      beszel_frontend_net:
+      papra_frontend_net:
+      prometheus_frontend_net:
+      honcho_frontend_net:
+      qbittorrent_frontend_net:
+      aiostreams_frontend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.local.example.com`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=local.example.com"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.local.example.com"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+  socket-proxy:
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+    image: ghcr.io/11notes/socket-proxy:2.2.0@sha256:eeb341c66337b95eaed9e710b12754e0cd59c4cbc521b8324ff906787c69934e
+    container_name: traefik-socket-proxy
+    user: "0:0"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - /run/docker.sock:/run/docker.sock:ro
+      - socket-proxy.run:/run/proxy
+    networks:
+      backend_net:
+    restart: always
+
+secrets:
+  cf_api_token:
+    file: ./secrets/cf_api_token.txt
+
+volumes:
+  socket-proxy.run:
+
+networks:
+  backend_net:
+    driver: bridge
+    internal: true
+  reverse_proxy_net:
+    external: true
+  arcane_frontend_net:
+    external: true
+  databasus_frontend_net:
+    external: true
+  dispatcharr_frontend_net:
+    external: true
+  dozzle_frontend_net:
+    external: true
+  immich_frontend_net:
+    external: true
+  karakeep_frontend_net:
+    external: true
+  open-webui_frontend_net:
+    external: true
+  paperless-ngx_frontend_net:
+    external: true
+  beszel_frontend_net:
+    external: true
+  papra_frontend_net:
+    external: true
+  prometheus_frontend_net:
+    external: true
+  honcho_frontend_net:
+    external: true
+  qbittorrent_frontend_net:
+    external: true
+  aiostreams_frontend_net:
+    external: true

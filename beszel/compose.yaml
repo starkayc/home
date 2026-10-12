@@ -1,0 +1,64 @@
+services:
+  beszel:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    image: henrygd/beszel:0.21@sha256:6b39a8b64f9b15d00a25e7683e31a93c46161182a54f62713525107064e10599
+    container_name: beszel
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - APP_URL=${APP_URL}
+      - HEARTBEAT_URL=${HEARTBEAT_URL}
+    volumes:
+      - ./app_data/data:/beszel_data
+    healthcheck:
+      test: [ 'CMD', '/beszel', 'health', '--url', 'http://localhost:8090' ]
+      interval: 120s
+      start_period: 10s
+      timeout: 5s
+    networks:
+      frontend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.beszel.rule=Host(`beszel.local.example.com`)"
+      - "traefik.http.routers.beszel.entrypoints=https"
+      - "traefik.http.routers.beszel.tls=true"
+      - "traefik.http.services.beszel.loadbalancer.server.port=8090"
+      - "traefik.docker.network=beszel_frontend_net"
+
+  beszel-agent:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    image: henrygd/beszel-agent:0.21@sha256:f27b1aa2c68404bc5b9e1a2ab36653bd9b4ee14f6299862f09cd5051a4134767
+    container_name: beszel-agent
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - LISTEN=${LISTEN}
+      - KEY=${KEY}
+      - TOKEN=${TOKEN}
+      - HUB_URL=${HUB_URL}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./app_data/agent:/var/lib/beszel-agent
+      - ./app_data/socket:/beszel_socket
+    healthcheck:
+      test: [ 'CMD', '/agent', 'health' ]
+      interval: 120s
+    network_mode: host
+    restart: unless-stopped
+
+networks:
+  frontend_net:
+    driver: bridge

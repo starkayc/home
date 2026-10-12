@@ -1,0 +1,30 @@
+services:
+  papra:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    image: ghcr.io/papra-hq/papra:26.7.0-rootless@sha256:bf4a66e776d0a40d71543747a2e17af800204b4a81d19f7951b8552c8032dbeb
+    container_name: papra
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    volumes:
+      - ./app_data/data:/app/app-data
+      - ./app_data/ingest:/app/ingestion
+    networks:
+      frontend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.papra.rule=Host(`papra.local.example.com`)"
+      - "traefik.http.routers.papra.entrypoints=https"
+      - "traefik.http.routers.papra.tls=true"
+      - "traefik.http.services.papra.loadbalancer.server.port=1221"
+
+networks:
+  frontend_net:
+    driver: bridge

@@ -1,0 +1,109 @@
+services:
+  prometheus:
+    deploy:
+      resources:
+        limits:
+          memory: .8GB
+          cpus: '1'
+        reservations:
+          memory: 256M
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    container_name: prometheus
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - UID=${UID}
+      - GID=${GID}
+    volumes:
+      - ./app_data/prometheus/config:/etc/prometheus
+      - ./app_data/prometheus/data:/prometheus
+    # ports:
+    #   - 9090:9090
+    networks:
+      backend_net:
+      reverse_proxy_net:
+    restart: unless-stopped
+
+  grafana:
+    deploy:
+      resources:
+        limits:
+          memory: .8GB
+          cpus: '1'
+        reservations:
+          memory: 256M
+    depends_on:
+      - prometheus
+    image: grafana/grafana:13.2.3@sha256:b28bae15e219c998fb0e0424ed724930cc61b1f61fb404d47c862f9a23f9e572
+    container_name: grafana
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - UID=${UID}
+      - GID=${GID}
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=${GF_USERS_ALLOW_SIGN_UP}
+      - GF_PLUGINS_PREINSTALL=${GF_PLUGINS_PREINSTALL}
+    volumes:
+      - ./app_data/grafana/data:/var/lib/grafana
+      - ./app_data/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./app_data/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.local.example.com`)"
+      - "traefik.http.routers.grafana.entrypoints=https"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.docker.network=prometheus_frontend_net"
+
+  unpoller:
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+    image: ghcr.io/unpoller/unpoller:v5.5.1@sha256:6d941ea1e46edebf12225b4ee9ca9abb88019a55f1add634e6f9300a201847b4
+    container_name: unpoller
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - UP_INFLUXDB_DISABLE=${UP_INFLUXDB_DISABLE}
+      - UP_POLLER_DEBUG=${UP_POLLER_DEBUG}
+      - UP_UNIFI_DYNAMIC=${UP_UNIFI_DYNAMIC}
+      - UP_PROMETHEUS_HTTP_LISTEN=${UP_PROMETHEUS_HTTP_LISTEN}
+      - UP_PROMETHEUS_NAMESPACE=${UP_PROMETHEUS_NAMESPACE}
+      - UP_UNIFI_CONTROLLER_0_VERIFY_SSL=${UP_UNIFI_CONTROLLER_0_VERIFY_SSL}
+      - UP_UNIFI_CONTROLLER_0_SAVE_ALARMS=${UP_UNIFI_CONTROLLER_0_SAVE_ALARMS}
+      - UP_UNIFI_CONTROLLER_0_SAVE_ANOMALIES=${UP_UNIFI_CONTROLLER_0_SAVE_ANOMALIES}
+      - UP_UNIFI_CONTROLLER_0_SAVE_EVENTS=${UP_UNIFI_CONTROLLER_0_SAVE_EVENTS}
+      - UP_UNIFI_CONTROLLER_0_SAVE_IDS=${UP_UNIFI_CONTROLLER_0_SAVE_IDS}
+      - UP_UNIFI_CONTROLLER_0_SAVE_SITES=${UP_UNIFI_CONTROLLER_0_SAVE_SITES}
+      - UP_UNIFI_CONTROLLER_0_SAVE_DPI=${UP_UNIFI_CONTROLLER_0_SAVE_DPI}
+      - UP_UNIFI_CONTROLLER_0_URL=${UP_UNIFI_CONTROLLER_0_URL}
+      - UP_UNIFI_CONTROLLER_0_USER=${UP_UNIFI_CONTROLLER_0_USER}
+      - UP_UNIFI_CONTROLLER_0_PASS=${UP_UNIFI_CONTROLLER_0_PASS}
+      - UP_UNIFI_CONTROLLER_0_SITE=${UP_UNIFI_CONTROLLER_0_SITE}
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+  reverse_proxy_net:
+    external: true

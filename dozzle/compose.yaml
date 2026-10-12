@@ -1,0 +1,64 @@
+services:
+  socket-proxy:
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+    image: docker.io/11notes/socket-proxy:2.2.0@sha256:eeb341c66337b95eaed9e710b12754e0cd59c4cbc521b8324ff906787c69934e
+    container_name: socket-proxy
+    user: '0:0'
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /run/docker.sock:/run/docker.sock:ro
+      - socket-proxy.run:/run/proxy
+    networks:
+      backend_net:
+    restart: always
+
+  dozzle:
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+    depends_on:
+      socket-proxy:
+        condition: service_healthy
+        restart: true
+    image: docker.io/amir20/dozzle:v11.3.1@sha256:ba65da5af3d2147cfc2ee68ea5a6e35b75d2dff7eeff226151a65c9d77831c02
+    container_name: dozzle
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/New_York
+      - DOZZLE_NO_ANALYTICS=true
+    volumes:
+      - socket-proxy.run:/var/run
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`dozzle.local.example.com`)"
+      - "traefik.http.routers.dozzle.entrypoints=https"
+      - "traefik.http.routers.dozzle.tls=true"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.docker.network=dozzle_frontend_net"
+
+volumes:
+  socket-proxy.run:
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true

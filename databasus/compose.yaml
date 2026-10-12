@@ -1,0 +1,37 @@
+services:
+  databasus:
+    deploy:
+      resources:
+        limits:
+          memory: 528M
+        reservations:
+          memory: 256M
+    image: databasus/databasus:v3.61.0@sha256:4adcd3fd2ab48168a5ee05eb5dbacf1d179d6df387b0daa1c311f57d4f9dd31e
+    container_name: databasus
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    environment:
+      - IS_DISABLE_ANONYMOUS_TELEMETRY=true
+    volumes:
+      - ./app_data/data:/databasus-data
+    networks:
+      frontend_net:
+      immich_backend_net:
+      paperless-ngx_backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.databasus.rule=Host(`dbs.local.example.com`)"
+      - "traefik.http.routers.databasus.entrypoints=https"
+      - "traefik.http.routers.databasus.tls=true"
+      - "traefik.http.services.databasus.loadbalancer.server.port=4005"
+      - "traefik.docker.network=databasus_frontend_net"
+
+networks:
+  frontend_net:
+    driver: bridge
+  immich_backend_net:
+    external: true
+  paperless-ngx_backend_net:
+    external: true

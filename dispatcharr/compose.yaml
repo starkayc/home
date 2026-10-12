@@ -1,0 +1,79 @@
+services:
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:0.32.0@sha256:b7d695c5cc98b9abd64c74a94539c1ebffc23d965021613c820c67e25dea41a3
+    container_name: dispatcharr
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - SYS_NICE
+    env_file: .env
+    volumes:
+      - ./app_data/data:/data
+    networks:
+      frontend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dispatcharr.rule=Host(`iptv.local.example.com`)"
+      - "traefik.http.routers.dispatcharr.entrypoints=https"
+      - "traefik.http.routers.dispatcharr.tls=true"
+      - "traefik.http.services.dispatcharr.loadbalancer.server.port=9191"
+
+  ecm:
+    image: ghcr.io/motwakorb/enhancedchannelmanager:0.18.1@sha256:2ef4645a618283264f2966b1db2ae387c9629ed254831fea4365bfec604fa0fb
+    container_name: enhancedchannelmanager
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - PUID=501
+      - PGID=20
+      - MCP_SECRETS_DIR=/run/secrets/ecm-mcp
+    volumes:
+      - ./app_data/data/enhancedchannelmanager:/config
+      - ./secrets/ecm:/run/secrets/ecm-mcp
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.enhancedchannelmanager.rule=Host(`ecm.local.example.com`)"
+      - "traefik.http.routers.enhancedchannelmanager.entrypoints=https"
+      - "traefik.http.routers.enhancedchannelmanager.tls=true"
+      - "traefik.http.services.enhancedchannelmanager.loadbalancer.server.port=6100"
+      - "traefik.docker.network=dispatcharr_frontend_net"
+  # ecm-mcp:
+  #   depends_on:
+  #     ecm:
+  #       condition: service_healthy
+  #   image: ghcr.io/motwakorb/enhancedchannelmanager-mcp:0.18.1@sha256:4312802781d7e82b6d860520d16f2af99a2bd6b78a07880bcc26cb4569ab7b07
+  #   container_name: enhancedchannelmanager-mcp
+  #   user: "501:20"
+  #   read_only: true
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   environment:
+  #     - MCP_SECRETS_DIR=/run/secrets/ecm-mcp
+  #     - ECM_URL=http://ecm:6100
+  #     - MCP_PORT=6101
+  #     - MCP_BIND_ADDRESS=0.0.0.0
+  #   volumes:
+  #     - ./secrets/ecm:/run/secrets/ecm-mcp:ro
+  #   tmpfs:
+  #     - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+  #   ports:
+  #     - 6101:6101
+  #   networks:
+  #     backend_net:
+  #   restart: unless-stopped
+  #   cpus: 1.0
+  #   mem_limit: 256m
+  #   pids_limit: 128
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

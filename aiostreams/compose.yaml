@@ -1,0 +1,147 @@
+services:
+  aiostreams:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    depends_on:
+      aiostreams-valkey:
+        condition: service_healthy
+      aiostreams-postgres:
+        condition: service_healthy
+    image: ghcr.io/viren070/aiostreams:v2@sha256:a749e0c52563b3d8fd7ac0ea829212c96f900394e8968275de7932c1e59fdac6
+    container_name: aiostreams
+    user: "501:20"
+    read_only: true
+    cap_drop:
+      - ALL
+    environment:
+      - TZ=${TZ}
+      - BASE_URL=${BASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URI=${DATABASE_URI}
+      - PORT=${PORT}
+      - REDIS_URI=${REDIS_URI}
+      - AIOSTREAMS_AUTH=${AIOSTREAMS_AUTH}
+      - AIOSTREAMS_AUTH_PERMISSIONS=${AIOSTREAMS_AUTH_PERMISSIONS}
+      - ADDON_NAME=${ADDON_NAME}
+      - ADDON_ID=${ADDON_ID}
+    volumes:
+      - ./app_data/data:/app/data
+    tmpfs:
+      - /tmp
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.aiostreams.rule=Host(`aiostreams.local.example.com`)"
+      - "traefik.http.routers.aiostreams.entrypoints=https"
+      - "traefik.http.routers.aiostreams.tls=true"
+      - "traefik.http.services.aiostreams.loadbalancer.server.port=35472"
+
+  aiostreams-postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    image: postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+    container_name: aiostreams-postgres
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    secrets:
+      - postgres_password
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD_FILE=${POSTGRES_PASSWORD_FILE}
+    volumes:
+      - ./app_data/database:/var/lib/postgresql
+    tmpfs:
+      - /var/run/postgresql
+      - /tmp
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+  aiostreams-valkey:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    image: valkey/valkey:9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
+    container_name: aiostreams-valkey
+    user: "501:20"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - VALKEY_EXTRA_FLAGS=${VALKEY_EXTRA_FLAGS}
+    volumes:
+      - ./app_data/valkey:/data
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+  nzbhydra2:
+    image: linuxserver/nzbhydra2:9.1.1@sha256:123782636d66dc299b3addb617fd720a55ac2f858fa8ca312892bf9176492d58
+    container_name: nzbhydra2
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETUID
+      - SETGID
+    environment:
+      - PUID=501
+      - PGID=20
+    volumes:
+      - ./app_data/nzbhydra2:/config
+    ports:
+      - "5076:5076"
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

@@ -1,0 +1,110 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:5.2.4@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983
+    container_name: qbittorrent
+    privileged: true
+    devices:
+      - /dev/sda1:/dev/sda1
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - WEBUI_PORT=${WEBUI_PORT}
+      - TORRENTING_PORT=${TORRENTING_PORT}
+      - DOCKER_MODS=${DOCKER_MODS}
+    volumes:
+      - ./app_data/data:/config
+      - ./app_data/incomplete:/downloads/incomplete
+      - ./app_data/.torrent:/downloads/.torrent
+      - ./app_data/watch:/downloads/watch
+    ports:
+      - "46606:46606"
+    networks:
+      backend_net:
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p /mnt/dontpissmeoff
+        mount /dev/sda1 /mnt/dontpissmeoff
+        exec /init
+
+  qui:
+    image: ghcr.io/autobrr/qui:v1.31.1@sha256:6ee1cf6df0a82687089e6e181aad09edb826b4b779603c56a28c803d19db99fd
+    container_name: qui
+    user: "501:20"
+    secrets:
+      - session_secret
+    environment:
+      - TZ=${TZ}
+      - QUI__HOST=${QUI__HOST}
+      - QUI__PORT=${QUI__PORT}
+      - QUI__LOG_LEVEL=${QUI__LOG_LEVEL}
+      - QUI__LOG_PATH=${QUI__LOG_PATH}
+      - QUI__SESSION_SECRET_FILE=${QUI__SESSION_SECRET_FILE}
+      - QUI__OIDC_ENABLED=${QUI__OIDC_ENABLED}
+      - QUI__OIDC_ISSUER=${QUI__OIDC_ISSUER}
+      - QUI__OIDC_CLIENT_ID=${QUI__OIDC_CLIENT_ID}
+      - QUI__OIDC_CLIENT_SECRET=${QUI__OIDC_CLIENT_SECRET}
+      - QUI__OIDC_REDIRECT_URL=${QUI__OIDC_REDIRECT_URL}
+      - QUI__OIDC_DISABLE_BUILT_IN_LOGIN=${QUI__OIDC_DISABLE_BUILT_IN_LOGIN}
+    volumes:
+      - ./app_data/qui/config:/config
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:23725 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qui.rule=Host(`qui.local.example.com`)"
+      - "traefik.http.routers.qui.entrypoints=https"
+      - "traefik.http.routers.qui.tls=true"
+      - "traefik.http.services.qui.loadbalancer.server.port=23725"
+      - "traefik.docker.network=qbittorrent_frontend_net"
+
+  autobrr:
+    image: ghcr.io/autobrr/autobrr:v1.88.0@sha256:e200008d43fe6cd2d944c9bcf20900cfb8ba8a8e509625bb78ee51910b994005
+    container_name: autobrr
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - AUTOBRR__HOST=${AUTOBRR__HOST}
+      - AUTOBRR__PORT=${AUTOBRR__PORT}
+      - AUTOBRR__OIDC_ENABLED=${AUTOBRR__OIDC_ENABLED}
+      - AUTOBRR__OIDC_ISSUER=${AUTOBRR__OIDC_ISSUER}
+      - AUTOBRR__OIDC_CLIENT_ID=${AUTOBRR__OIDC_CLIENT_ID}
+      - AUTOBRR__OIDC_CLIENT_SECRET=${AUTOBRR__OIDC_CLIENT_SECRET}
+      - AUTOBRR__OIDC_REDIRECT_URL=${AUTOBRR__OIDC_REDIRECT_URL}
+      - AUTOBRR__OIDC_DISABLE_BUILT_IN_LOGIN=${AUTOBRR__OIDC_DISABLE_BUILT_IN_LOGIN}
+    volumes:
+      - ./app_data/autobrr/config:/config
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.autobrr.rule=Host(`autobrr.local.example.com`)"
+      - "traefik.http.routers.autobrr.entrypoints=https"
+      - "traefik.http.routers.autobrr.tls=true"
+      - "traefik.http.services.autobrr.loadbalancer.server.port=28102"
+      - "traefik.docker.network=qbittorrent_frontend_net"
+
+secrets:
+  session_secret:
+    file: ./secrets/session_secret.txt
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

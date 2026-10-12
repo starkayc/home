@@ -1,0 +1,128 @@
+services:
+  arcane-docker-proxy:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    container_name: arcane-docker-proxy
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      - AUTH=0
+      - SECRETS=0
+      - POST=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISTRIBUTION=0
+      - EXEC=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VOLUMES=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --spider --tries=1 http://localhost:2375/_ping || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  arcane:
+    depends_on:
+      arcane-docker-proxy:
+        condition: service_healthy
+      arcane-postgres:
+        condition: service_healthy
+    image: ghcr.io/getarcaneapp/manager:v2.15@sha256:aebb83a49e0e614dfc54ef8331af5826a89ed47e2e964db420a4e22756f166bc
+    container_name: arcane
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    volumes:
+      - ./app_data/data:/app/data
+      - /Users/star/Docker:/Users/star/Docker
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.arcane.rule=Host(`arcane.local.example.com`)"
+      - "traefik.http.routers.arcane.entrypoints=https"
+      - "traefik.http.routers.arcane.tls=true"
+      - "traefik.http.services.arcane.loadbalancer.server.port=3552"
+      - "traefik.docker.network=arcane_frontend_net"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  arcane-postgres:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    image: postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+    container_name: arcane-postgres
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    secrets:
+      - postgres_password
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD_FILE=${POSTGRES_PASSWORD_FILE}
+    volumes:
+      - ./app_data/database:/var/lib/postgresql
+    tmpfs:
+      - /var/run/postgresql
+      - /tmp
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

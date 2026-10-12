@@ -1,0 +1,61 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:16-rootless@sha256:5effb7305584aca479b29fde6f9631a6dbe86ae798ae02eeea33a3666f0c0bf8
+    container_name: forgejo
+    user: "501:20"
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    volumes:
+      - ./app_data/data:/var/lib/gitea
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forgejo.rule=Host(`git.local.example.com`)"
+      - "traefik.http.routers.forgejo.entrypoints=https"
+      - "traefik.http.routers.forgejo.tls=true"
+      - "traefik.http.services.forgejo.loadbalancer.server.port=3000"
+      - "traefik.docker.network=forgejo_frontend_net"
+
+  dind:
+    image: docker:29.9.0-dind@sha256:0b6d18a4a222e71c88be6034926b4f6cde2fc33c2218643d03ccfddc65995470
+    container_name: forgejo-dind
+    privileged: true
+    command: [ "sh", "-c", "dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:2375 --tls=false & for i in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 2; done; chmod 666 /var/run/docker.sock 2>/dev/null; until docker network inspect actnet >/dev/null 2>&1; do docker network create --subnet=172.30.0.0/24 --gateway=172.30.0.1 actnet 2>>/tmp/actnet.log && break; sleep 3; done; wait" ]
+    volumes:
+      - dind-data:/var/lib/docker
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+  runner:
+    depends_on:
+      dind:
+        condition: service_started
+    image: code.forgejo.org/forgejo/runner:13.2.0@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
+    container_name: forgejo-runner
+    user: "501:20"
+    environment:
+      DOCKER_HOST: tcp://dind:2375
+    command: '/bin/sh -c "sleep 5; forgejo-runner daemon --config /config.yaml"'
+    volumes:
+      - ./app_data/runner/data:/data
+      - ./app_data/runner/config.yaml:/config.yaml
+    networks:
+      backend_net:
+    restart: unless-stopped
+    links:
+      - dind
+
+volumes:
+  dind-data:
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

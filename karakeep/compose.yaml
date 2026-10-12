@@ -1,0 +1,77 @@
+services:
+  web:
+    deploy:
+      resources:
+        limits:
+          memory: .8GB
+        reservations:
+          memory: 256M
+    image: ghcr.io/karakeep-app/karakeep:0.33.2@sha256:b069e4307dec06ea06d16989c6861c30a1ff208568be44ed5fb5d422cd3e950c
+    container_name: karakeep
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    volumes:
+      - ./app_data/data:/data
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.karakeep.rule=Host(`keep.local.example.com`)"
+      - "traefik.http.routers.karakeep.entrypoints=https"
+      - "traefik.http.routers.karakeep.tls=true"
+      - "traefik.http.services.karakeep.loadbalancer.server.port=3000"
+      - "traefik.docker.network=karakeep_frontend_net"
+
+  chrome:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    image: ghcr.io/karakeep-app/karakeep-chrome:151.0.7922.47-r1@sha256:5b19bbb160e9ff60681a3abd97e1c4ec9f64212301410de658c3900ab7ef31e7
+    container_name: karakeep-chrome
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --disable-gpu
+      - --disable-dev-shm-usage
+      - --hide-scrollbars
+      - --disable-blink-features=AutomationControlled
+      - --window-size=1440,900
+    networks:
+      frontend_net:
+      backend_net:
+    restart: unless-stopped
+
+  meilisearch:
+    deploy:
+      resources:
+        limits:
+          memory: .5GB
+        reservations:
+          memory: 128M
+    image: docker.io/getmeili/meilisearch:v1.41.0@sha256:860fa4baed04ae1c235de870edab0c8006227546dea1bbb6411fbfc5e27cf1db
+    container_name: karakeep-meilisearch
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - MEILI_NO_ANALYTICS=${MEILI_NO_ANALYTICS}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+    volumes:
+      - ./app_data/meilisearch:/meili_data
+    networks:
+      backend_net:
+    restart: unless-stopped
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true

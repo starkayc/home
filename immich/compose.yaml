@@ -1,0 +1,141 @@
+name: immich
+
+services:
+  immich-server:
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+        reservations:
+          memory: 256M
+    depends_on:
+      redis:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    image: ghcr.io/immich-app/immich-server:v3.3.1@sha256:db996e352359771c6a3db121a0ed8761516b22f727fc092a0f46dcfef82c1bc1
+    container_name: immich-server
+    security_opt:
+      - no-new-privileges:true
+    secrets:
+      - postgres_password
+    env_file: .env
+    volumes:
+      - ${UPLOAD_LOCATION}:/data
+      - ${EXTERNAL_LOCATION}:/mnt/dontpissmeoff:ro
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      disable: false
+    networks:
+      frontend_net:
+      backend_net:
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.immich.rule=Host(`photos.local.example.com`)"
+      - "traefik.http.routers.immich.entrypoints=https"
+      - "traefik.http.routers.immich.tls=true"
+      - "traefik.http.services.immich.loadbalancer.server.port=2283"
+      - "traefik.docker.network=immich_frontend_net"
+
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:v3.3.1@sha256:513c831cfb010ad319341a0c86b42c575a0d5b688d3e8cae346ee624074a58ed
+    container_name: immich-machine-learning
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=${TZ}
+      - MACHINE_LEARNING_MODEL_REVISION=${MACHINE_LEARNING_MODEL_REVISION}
+      - MACHINE_LEARNING_WORKER_TIMEOUT=${MACHINE_LEARNING_WORKER_TIMEOUT}
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - model-cache:/cache
+    healthcheck:
+      disable: false
+    networks:
+      backend_net:
+    restart: always
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    image: docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+    container_name: immich-valkey
+    user: "501:20"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./app_data/valkey:/data
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      backend_net:
+    restart: always
+
+  database:
+    deploy:
+      resources:
+        limits:
+          memory: 784M
+        reservations:
+          memory: 256M
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    container_name: immich-postgres
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    secrets:
+      - postgres_password
+    environment:
+      - TZ=${TZ}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD_FILE=${POSTGRES_PASSWORD_FILE}
+      - POSTGRES_INITDB_ARGS=${POSTGRES_INITDB_ARGS}
+    volumes:
+      - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+    tmpfs:
+      - /var/run/postgresql
+      - /etc/postgresql
+      - /tmp
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 10s
+    networks:
+      backend_net:
+    restart: always
+    shm_size: 128mb
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+
+volumes:
+  model-cache:
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

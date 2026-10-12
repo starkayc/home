@@ -1,0 +1,28 @@
+services:
+  open-webui:
+    deploy:
+      resources:
+        limits:
+          memory: 896M
+        reservations:
+          memory: 512M
+    image: ghcr.io/open-webui/open-webui:v0.12.0@sha256:1565038903151ced924b5a3226f73f40f16963df4b910441f6391f10144afdaa
+    container_name: open-webui
+    security_opt:
+      - no-new-privileges:true
+    env_file: .env
+    volumes:
+      - ./app_data/data:/app/backend/data
+    networks:
+      frontend_net:
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.open-webui.rule=Host(`ai.local.example.com`)"
+      - "traefik.http.routers.open-webui.entrypoints=https"
+      - "traefik.http.routers.open-webui.tls=true"
+      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
+
+networks:
+  frontend_net:
+    driver: bridge
