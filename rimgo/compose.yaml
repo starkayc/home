@@ -1,0 +1,14 @@
+services:
+  rimgo:
+    image: codeberg.org/rimgo/rimgo:1.4.2@sha256:569800892522c7dd7d47290ce80d5c1fbb451609ce0d983c545a5d203ca93048
+    container_name: rimgo
+    user: "65534:65534"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    env_file: .env
+    ports:
+      - "127.0.0.1:5466:5466"
+    restart: always

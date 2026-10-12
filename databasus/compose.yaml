@@ -1,0 +1,32 @@
+services:
+  databasus:
+    image: ghcr.io/databasus/databasus:v3.60.0@sha256:2e9aec567de7ed3f0c8f360ea72abe6a8425704d9272232dae4325ad920b9204
+    container_name: databasus
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETUID
+      - SETGID
+    environment:
+      - IS_DISABLE_ANONYMOUS_TELEMETRY=true
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./app_data/data:/databasus-data
+    ports:
+      - "127.0.0.1:4005:4005"
+    networks:
+      frontend_net:
+      umami_backend_net:
+    restart: unless-stopped
+
+networks:
+  frontend_net:
+    driver: bridge
+  umami_backend_net:
+    external: true

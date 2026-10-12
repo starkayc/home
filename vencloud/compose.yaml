@@ -1,0 +1,66 @@
+services:
+  vencloud:
+    depends_on:
+      vencloud-valkey:
+        condition: service_healthy
+    image: ghcr.io/vencord/vencloud:latest@sha256:dcfa472a8368b144a8a5c004550101503969ba5acc42fc2aaf87ccc48ba1220e
+    container_name: vencloud
+    user: "65534:65534"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - PORT=${PORT}
+      - HOST=${HOST}
+      - REDIS_URI=${REDIS_URI}
+      - ROOT_REDIRECT=${ROOT_REDIRECT}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI}
+      - PEPPER_SECRETS=${PEPPER_SECRETS}
+      - PEPPER_SETTINGS=${PEPPER_SETTINGS}
+      - SIZE_LIMIT=${SIZE_LIMIT}
+      - ALLOWED_USERS=${ALLOWED_USERS}
+      - PROMETHEUS=${PROMETHEUS}
+      - PROXY_HEADER=${PROXY_HEADER}
+    tmpfs:
+      - /tmp
+    ports:
+      - "127.0.0.1:8485:8080"
+    networks:
+      frontend_net:
+      backend_net:
+    restart: always
+
+  vencloud-valkey:
+    image: valkey/valkey:9.2-alpine@sha256:cdcb7b1c7b6f1c9cb9442c71ac6275e78184657448407b2c1fdde7ee8024f4fb
+    container_name: vencloud-valkey
+    user: "1000:1000"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - VALKEY_EXTRA_FLAGS=${VALKEY_EXTRA_FLAGS}
+    volumes:
+      - ./app_data/valkey:/data
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      backend_net:
+    restart: always
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true

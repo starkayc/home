@@ -1,0 +1,75 @@
+services:
+  arcane-docker-proxy:
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    container_name: arcane-docker-proxy
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      - AUTH=0
+      - SECRETS=0
+      - POST=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISTRIBUTION=0
+      - EXEC=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VOLUMES=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  arcane-agent:
+    depends_on:
+      - arcane-docker-proxy
+    image: ghcr.io/getarcaneapp/agent:latest
+    container_name: arcane-agent
+    environment:
+      - AGENT_MODE=true
+      - EDGE_TRANSPORT=poll
+      - AGENT_TOKEN=${AGENT_TOKEN}
+      - MANAGER_API_URL=${MANAGER_API_URL}
+      - DOCKER_HOST=${DOCKER_HOST}
+      - PROJECTS_DIRECTORY=/opt/docker
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./app_data/data:/app/data
+      - /opt/docker:/opt/docker
+    ports:
+      - "${LEONA_TAILSCALE_IP}:3553:3553"
+    networks:
+      backend_net:
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    extra_hosts:
+      - "${ARCANE_DOMAIN}:${POPPY_TAILSCALE_IP}"
+      - "${GIT_DOMAIN}:${POPPY_TAILSCALE_IP}"
+
+networks:
+  backend_net:
+    driver: bridge

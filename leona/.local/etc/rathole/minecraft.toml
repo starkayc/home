@@ -1,7 +1,0 @@
-[server]
-bind_addr = "0.0.0.0:12345"
-heartbeat_interval = 30
-
-[server.services.minecraft-atm10]
-token = "tokenKey"
-bind_addr = "0.0.0.0:27000"

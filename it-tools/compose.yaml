@@ -1,0 +1,17 @@
+services:
+  it-tools:
+    image: ghcr.io/sharevb/it-tools:latest@sha256:c4f2e3b04c3711477d01ef1530a0392e5141ff978b830040b13e5e6cff48a2e0
+    container_name: it-tools
+    user: "101:101"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    ports:
+      - "127.0.0.1:2577:8080"
+    restart: unless-stopped

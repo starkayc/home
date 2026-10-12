@@ -1,0 +1,18 @@
+services:
+  redlib:
+    image: ghcr.io/cycneuramus/containers:redlib@sha256:4b607fd58f2c170d9bbf073bfedbe570c5b6f29c7e72b3a2285e86d5c7f98af9
+    container_name: redlib
+    user: nobody
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    env_file: .env
+    ports:
+      - "127.0.0.1:6672:8080"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "--tries=1", "http://localhost:8080/settings" ]
+      interval: 5m
+      timeout: 3s
+    restart: unless-stopped
